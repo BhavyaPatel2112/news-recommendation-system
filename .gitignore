@@ -1,0 +1,25 @@
+# Dataset folder
+MINDsmall_train/
+
+# Large dataset files
+*.tsv
+*.vec
+
+# Jupyter notebook checkpoints
+.ipynb_checkpoints/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Mac system files
+.DS_Store
+
+# Environment folders
+venv/
+.env/
+
+# VS Code settings
+.vscode/
+
