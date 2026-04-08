@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NewsAI — Your Feed</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:      #FBFBFD;
+      --bg-alt:  #F5F5F7;
+      --text:    #1D1D1F;
+      --text-2:  #6E6E73;
+      --text-3:  #86868B;
+      --accent:  #0071E3;
+      --accent-h:#0077ED;
+      --accent-bg: rgba(0,113,227,0.08);
+      --border:  rgba(0,0,0,0.1);
+      --card:    #FFFFFF;
+      --nav-bg:  rgba(255,255,255,0.88);
+      --selected:#EBF4FF;
+      --selected-border: #0071E3;
+      --error:   #FF3B30;
+      --success: #34C759;
+      --explore: #FF9F0A;
+      --pill:    980px;
+      --r:       16px;
+      --r-sm:    10px;
+      --ease:    cubic-bezier(0.4,0,0.2,1);
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+      background: var(--bg); color: var(--text);
+      -webkit-font-smoothing: antialiased; min-height: 100vh;
+    }
+
+    /* ── NAV ─────────────────────────────────────────── */
+    nav {
+      position: sticky; top: 0; z-index: 200;
+      background: var(--nav-bg);
+      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      height: 52px;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 24px;
+    }
+    .nav-logo { font-size: 17px; font-weight: 600; color: var(--text); text-decoration: none; letter-spacing: -0.3px; }
+    .nav-user {
+      display: flex; align-items: center; gap: 16px;
+    }
+    .nav-user-name {
+      font-size: 14px; color: var(--text-2);
+    }
+    .nav-user-name strong { color: var(--text); font-weight: 600; }
+    .btn-logout {
+      padding: 6px 14px; border-radius: var(--pill);
+      font-size: 13px; font-weight: 500;
+      border: 1px solid var(--border); background: transparent;
+      color: var(--text-2); cursor: pointer;
+      transition: all 0.2s var(--ease); font-family: inherit;
+    }
+    .btn-logout:hover { border-color: var(--error); color: var(--error); }
+
+    /* ── PHASE WRAPPER ───────────────────────────────── */
+    .phase { display: none; }
+    .phase.active { display: block; }
+
+    /* ── COLD START ──────────────────────────────────── */
+    .cold-start {
+      max-width: 680px; margin: 0 auto;
+      padding: 64px 24px 40px;
+      text-align: center;
+    }
+    .cold-start h1 {
+      font-size: 36px; font-weight: 700; letter-spacing: -1px;
+      margin-bottom: 10px;
+    }
+    .cold-start p { font-size: 17px; color: var(--text-2); margin-bottom: 40px; }
+
+    .start-options {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 16px; margin-bottom: 32px;
+    }
+    .start-option {
+      padding: 28px 24px; border-radius: var(--r);
+      border: 2px solid var(--border); background: var(--card);
+      cursor: pointer; text-align: left;
+      transition: all 0.25s var(--ease);
+    }
+    .start-option:hover {
+      border-color: var(--accent); background: var(--accent-bg);
+      transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,113,227,0.12);
+    }
+    .start-option.selected {
+      border-color: var(--accent); background: var(--accent-bg);
+    }
+    .start-option-icon { font-size: 28px; margin-bottom: 12px; }
+    .start-option h3 { font-size: 16px; font-weight: 600; margin-bottom: 5px; }
+    .start-option p  { font-size: 14px; color: var(--text-2); line-height: 1.5; margin: 0; }
+
+    /* Search input */
+    .search-box {
+      display: none; margin-bottom: 24px; text-align: left;
+    }
+    .search-box.visible { display: block; }
+    .search-row {
+      display: flex; gap: 10px;
+    }
+    .search-input {
+      flex: 1; padding: 14px 18px;
+      border: 1.5px solid var(--border); border-radius: var(--r-sm);
+      font-size: 16px; font-family: inherit; color: var(--text);
+      background: var(--card); outline: none;
+      transition: border-color 0.2s;
+    }
+    .search-input:focus { border-color: var(--accent); }
+    .btn-search {
+      padding: 14px 22px; border-radius: var(--r-sm);
+      background: var(--accent); color: #fff;
+      font-size: 15px; font-weight: 500; font-family: inherit;
+      border: none; cursor: pointer; transition: background 0.2s;
+      white-space: nowrap;
+    }
+    .btn-search:hover { background: var(--accent-h); }
+
+    /* Browse dropdowns */
+    .browse-box {
+      display: none; margin-bottom: 24px;
+    }
+    .browse-box.visible { display: block; }
+    .select-row {
+      display: flex; gap: 12px; flex-wrap: wrap;
+    }
+    .browse-select {
+      flex: 1; min-width: 180px; padding: 13px 16px;
+      border: 1.5px solid var(--border); border-radius: var(--r-sm);
+      font-size: 15px; font-family: inherit; color: var(--text);
+      background: var(--card); outline: none; cursor: pointer;
+      transition: border-color 0.2s;
+    }
+    .browse-select:focus { border-color: var(--accent); }
+
+    /* Seed cards (search results / browse preview) */
+    .seed-cards { display: none; text-align: left; margin-bottom: 24px; }
+    .seed-cards.visible { display: block; }
+    .seed-cards-label {
+      font-size: 13px; font-weight: 600; color: var(--text-2);
+      letter-spacing: 0.05em; text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+    .seed-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--r-sm); padding: 14px 16px;
+      margin-bottom: 8px; display: flex; align-items: flex-start; gap: 12px;
+    }
+    .seed-num {
+      font-size: 13px; font-weight: 700; color: var(--accent);
+      min-width: 20px; margin-top: 1px;
+    }
+    .seed-info {}
+    .seed-title { font-size: 14px; font-weight: 600; margin-bottom: 3px; }
+    .seed-cat   { font-size: 12px; color: var(--text-2); }
+
+    /* Start button */
+    .btn-start {
+      display: none; width: 100%; padding: 15px;
+      background: var(--accent); color: #fff;
+      font-size: 17px; font-weight: 600; font-family: inherit;
+      border: none; border-radius: var(--r-sm); cursor: pointer;
+      transition: all 0.25s var(--ease);
+      align-items: center; justify-content: center; gap: 8px;
+    }
+    .btn-start.visible { display: flex; }
+    .btn-start:hover {
+      background: var(--accent-h); transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(0,113,227,0.3);
+    }
+
+    /* ── RECOMMENDATIONS PHASE ───────────────────────── */
+    .recs-layout {
+      display: grid; grid-template-columns: 1fr 300px;
+      gap: 24px; max-width: 1120px; margin: 0 auto;
+      padding: 32px 24px;
+      align-items: start;
+    }
+
+    /* Header */
+    .recs-header {
+      display: flex; align-items: baseline; gap: 14px;
+      margin-bottom: 24px; flex-wrap: wrap;
+    }
+    .recs-header h2 {
+      font-size: 24px; font-weight: 700; letter-spacing: -0.5px;
+    }
+    .round-badge {
+      font-size: 13px; font-weight: 600; color: var(--text-2);
+      background: var(--bg-alt); border: 1px solid var(--border);
+      border-radius: var(--pill); padding: 3px 12px;
+    }
+
+    /* Loading state */
+    .loading-cards {
+      display: flex; flex-direction: column; gap: 16px;
+    }
+    .skeleton {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--r); padding: 24px;
+      animation: pulse 1.6s ease-in-out infinite;
+    }
+    .skeleton-line {
+      height: 14px; border-radius: 7px;
+      background: var(--bg-alt); margin-bottom: 10px;
+    }
+    .skeleton-line.short { width: 40%; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+
+    /* Article cards */
+    .article-cards { display: flex; flex-direction: column; gap: 14px; }
+    .article-card {
+      background: var(--card); border-radius: var(--r);
+      border: 2px solid transparent;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+      padding: 22px 24px; cursor: pointer;
+      transition: all 0.22s var(--ease);
+      position: relative;
+    }
+    .article-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 28px rgba(0,0,0,0.1);
+      border-color: rgba(0,113,227,0.3);
+    }
+    .article-card.selected {
+      border-color: var(--selected-border);
+      background: var(--selected);
+      box-shadow: 0 4px 20px rgba(0,113,227,0.15);
+    }
+    .article-card.selected::after {
+      content: '✓';
+      position: absolute; top: 18px; right: 20px;
+      width: 26px; height: 26px; border-radius: 50%;
+      background: var(--accent); color: #fff;
+      font-size: 14px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    .card-top {
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 10px; flex-wrap: wrap;
+    }
+    .cat-badge {
+      font-size: 11px; font-weight: 600; letter-spacing: 0.04em;
+      text-transform: uppercase; color: var(--accent);
+      background: var(--accent-bg); padding: 3px 10px;
+      border-radius: var(--pill);
+    }
+    .subcat-badge {
+      font-size: 11px; color: var(--text-3);
+    }
+    .explore-tag {
+      font-size: 11px; font-weight: 600;
+      color: var(--explore); background: rgba(255,159,10,0.1);
+      border-radius: var(--pill); padding: 3px 10px;
+      letter-spacing: 0.03em;
+    }
+    .score-pill {
+      margin-left: auto; font-size: 11px; color: var(--text-3);
+    }
+
+    .card-title {
+      font-size: 17px; font-weight: 600; letter-spacing: -0.3px;
+      line-height: 1.35; margin-bottom: 8px; padding-right: 32px;
+      color: var(--text);
+    }
+    .card-abstract {
+      font-size: 14px; color: var(--text-2); line-height: 1.6;
+      display: -webkit-box; -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical; overflow: hidden;
+      margin-bottom: 12px;
+    }
+    .card-explanation {
+      display: none; padding-top: 12px;
+      border-top: 1px solid var(--border);
+    }
+    .card-explanation.visible { display: block; }
+    .explanation-because {
+      font-size: 13px; color: var(--text-2);
+      display: flex; gap: 6px; align-items: flex-start; margin-bottom: 6px;
+    }
+    .explanation-because span:first-child { color: var(--accent); font-size: 14px; }
+    .explanation-keywords {
+      display: flex; gap: 6px; flex-wrap: wrap;
+    }
+    .keyword-pill {
+      font-size: 12px; background: var(--bg-alt);
+      border: 1px solid var(--border); border-radius: var(--pill);
+      padding: 2px 10px; color: var(--text-2);
+    }
+
+    /* Action bar */
+    .action-bar {
+      display: flex; gap: 12px; margin-top: 20px; flex-wrap: wrap;
+    }
+    .btn-next {
+      padding: 14px 28px; border-radius: var(--r-sm);
+      background: var(--accent); color: #fff;
+      font-size: 16px; font-weight: 600; font-family: inherit;
+      border: none; cursor: pointer; transition: all 0.2s var(--ease);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .btn-next:hover:not(:disabled) {
+      background: var(--accent-h); transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(0,113,227,0.3);
+    }
+    .btn-next:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+    .btn-done {
+      padding: 14px 24px; border-radius: var(--r-sm);
+      background: transparent; color: var(--text-2);
+      font-size: 16px; font-weight: 500; font-family: inherit;
+      border: 1.5px solid var(--border); cursor: pointer;
+      transition: all 0.2s var(--ease);
+    }
+    .btn-done:hover { border-color: var(--text-2); color: var(--text); }
+
+    /* ── SIDEBAR ─────────────────────────────────────── */
+    .sidebar {
+      position: sticky; top: 68px;
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--r); padding: 22px;
+    }
+    .sidebar-title {
+      font-size: 13px; font-weight: 600; letter-spacing: 0.05em;
+      text-transform: uppercase; color: var(--text-2);
+      margin-bottom: 18px;
+    }
+    .stat-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 0; border-bottom: 1px solid var(--border);
+    }
+    .stat-row:last-of-type { border-bottom: none; }
+    .stat-label { font-size: 14px; color: var(--text-2); }
+    .stat-val   { font-size: 14px; font-weight: 600; color: var(--text); }
+
+    .interests-title {
+      font-size: 13px; font-weight: 600; color: var(--text-2);
+      margin: 20px 0 12px; letter-spacing: 0.04em; text-transform: uppercase;
+    }
+    .interest-row { margin-bottom: 10px; }
+    .interest-name { font-size: 13px; color: var(--text); margin-bottom: 4px; display: flex; justify-content: space-between; }
+    .interest-bar { height: 4px; border-radius: 2px; background: var(--bg-alt); overflow: hidden; }
+    .interest-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.5s var(--ease); }
+
+    .btn-wrap-up {
+      width: 100%; margin-top: 20px; padding: 12px;
+      border-radius: var(--r-sm); border: 1.5px solid var(--border);
+      background: transparent; color: var(--text-2);
+      font-size: 14px; font-weight: 500; font-family: inherit;
+      cursor: pointer; transition: all 0.2s var(--ease);
+    }
+    .btn-wrap-up:hover { border-color: var(--error); color: var(--error); }
+
+    /* ── SUMMARY PHASE ───────────────────────────────── */
+    .summary-wrap {
+      max-width: 640px; margin: 0 auto; padding: 64px 24px;
+      text-align: center;
+    }
+    .summary-icon { font-size: 56px; margin-bottom: 20px; }
+    .summary-wrap h1 { font-size: 36px; font-weight: 700; letter-spacing: -1px; margin-bottom: 10px; }
+    .summary-wrap p  { font-size: 17px; color: var(--text-2); margin-bottom: 36px; }
+    .summary-stats {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 16px; margin-bottom: 36px;
+    }
+    .summary-stat {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--r); padding: 20px 16px; text-align: center;
+    }
+    .summary-stat strong { display: block; font-size: 28px; font-weight: 700; letter-spacing: -1px; color: var(--text); }
+    .summary-stat span   { font-size: 13px; color: var(--text-2); }
+    .summary-cats { text-align: left; margin-bottom: 36px; }
+    .summary-cats h3 { font-size: 16px; font-weight: 600; margin-bottom: 14px; }
+    .summary-cat-row { margin-bottom: 12px; }
+    .summary-cat-name { font-size: 14px; color: var(--text); margin-bottom: 5px; display: flex; justify-content: space-between; }
+    .summary-cat-bar  { height: 5px; border-radius: 3px; background: var(--bg-alt); overflow: hidden; }
+    .summary-cat-fill { height: 100%; background: var(--accent); border-radius: 3px; }
+    .btn-new-session {
+      padding: 15px 36px; border-radius: var(--pill);
+      background: var(--accent); color: #fff;
+      font-size: 17px; font-weight: 600; font-family: inherit;
+      border: none; cursor: pointer; transition: all 0.25s var(--ease);
+    }
+    .btn-new-session:hover { background: var(--accent-h); transform: translateY(-1px); box-shadow: 0 8px 24px rgba(0,113,227,0.3); }
+
+    /* ── TOAST ───────────────────────────────────────── */
+    .toast {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(60px);
+      background: var(--text); color: #fff;
+      padding: 12px 20px; border-radius: var(--pill);
+      font-size: 14px; font-weight: 500;
+      opacity: 0; transition: all 0.3s var(--ease); z-index: 999;
+      pointer-events: none;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* ── LOADING OVERLAY ─────────────────────────────── */
+    .loading-overlay {
+      position: fixed; inset: 0; background: rgba(251,251,253,0.7);
+      backdrop-filter: blur(4px); z-index: 500;
+      display: none; align-items: center; justify-content: center;
+      flex-direction: column; gap: 16px;
+    }
+    .loading-overlay.show { display: flex; }
+    .loader-ring {
+      width: 44px; height: 44px;
+      border: 3.5px solid var(--border);
+      border-top-color: var(--accent); border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    .loader-text { font-size: 15px; color: var(--text-2); }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    @media (max-width: 768px) {
+      .recs-layout { grid-template-columns: 1fr; }
+      .sidebar { position: static; }
+      .start-options { grid-template-columns: 1fr; }
+      .summary-stats { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="/" class="nav-logo">NewsAI</a>
+  <div class="nav-user">
+    <span class="nav-user-name">Hi, <strong>{{ user_name }}</strong></span>
+    <button class="btn-logout" onclick="handleLogout()">Sign out</button>
+  </div>
+</nav>
+
+<!-- LOADING OVERLAY -->
+<div class="loading-overlay" id="loading-overlay">
+  <div class="loader-ring"></div>
+  <div class="loader-text" id="loader-text">Loading recommendations...</div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- PHASE 1: COLD START                           -->
+<!-- ══════════════════════════════════════════════ -->
+<div class="phase active" id="phase-cold">
+  <div class="cold-start">
+    <h1>Where would you like to start?</h1>
+    <p>Choose how to seed your personalised feed.</p>
+
+    <div class="start-options">
+      <div class="start-option" id="opt-search" onclick="selectMode('search')">
+        <div class="start-option-icon">🔍</div>
+        <h3>Search a topic</h3>
+        <p>Type anything in plain English — "NBA", "climate change", "stock market".</p>
+      </div>
+      <div class="start-option" id="opt-browse" onclick="selectMode('browse')">
+        <div class="start-option-icon">📂</div>
+        <h3>Browse by category</h3>
+        <p>Pick a topic category and subcategory to explore curated articles.</p>
+      </div>
+    </div>
+
+    <!-- SEARCH UI -->
+    <div class="search-box" id="search-box">
+      <div class="search-row">
+        <input class="search-input" id="search-input" type="text"
+               placeholder="e.g. NBA playoffs, federal reserve, climate change…"
+               onkeydown="if(event.key==='Enter') runSearch()" />
+        <button class="btn-search" onclick="runSearch()">Search</button>
+      </div>
+    </div>
+
+    <!-- BROWSE UI -->
+    <div class="browse-box" id="browse-box">
+      <div class="select-row">
+        <select class="browse-select" id="cat-select" onchange="onCatChange()">
+          <option value="">Select a category…</option>
+        </select>
+        <select class="browse-select" id="subcat-select" onchange="onSubcatChange()">
+          <option value="">Select a subcategory…</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- SEED PREVIEW -->
+    <div class="seed-cards" id="seed-cards">
+      <div class="seed-cards-label" id="seed-label">Starting articles</div>
+      <div id="seed-list"></div>
+    </div>
+
+    <!-- START BUTTON -->
+    <button class="btn-start" id="btn-start" onclick="startSession()">
+      Start reading →
+    </button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- PHASE 2: RECOMMENDATIONS                      -->
+<!-- ══════════════════════════════════════════════ -->
+<div class="phase" id="phase-recs">
+  <div class="recs-layout">
+
+    <!-- LEFT: ARTICLES -->
+    <div>
+      <div class="recs-header">
+        <h2 id="recs-title">Your picks</h2>
+        <span class="round-badge" id="round-badge">Round 1</span>
+      </div>
+
+      <!-- Skeleton loading -->
+      <div class="loading-cards" id="skeletons">
+        <div class="skeleton">
+          <div class="skeleton-line short"></div>
+          <div class="skeleton-line"></div>
+          <div class="skeleton-line"></div>
+        </div>
+        <div class="skeleton">
+          <div class="skeleton-line short"></div>
+          <div class="skeleton-line"></div>
+          <div class="skeleton-line"></div>
+        </div>
+        <div class="skeleton">
+          <div class="skeleton-line short"></div>
+          <div class="skeleton-line"></div>
+          <div class="skeleton-line"></div>
+        </div>
+      </div>
+
+      <div class="article-cards" id="article-cards" style="display:none"></div>
+
+      <div class="action-bar" id="action-bar" style="display:none">
+        <button class="btn-next" id="btn-next" onclick="handleNext()" disabled>
+          Next round →
+        </button>
+        <button class="btn-done" onclick="endSession()">I'm done reading</button>
+      </div>
+    </div>
+
+    <!-- RIGHT: SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-title">Your Profile</div>
+      <div class="stat-row">
+        <span class="stat-label">Articles read</span>
+        <span class="stat-val" id="sb-count">—</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">Skips penalised</span>
+        <span class="stat-val" id="sb-skips">—</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">Dominant topic</span>
+        <span class="stat-val" id="sb-dominant">—</span>
+      </div>
+      <div class="interests-title">Interest breakdown</div>
+      <div id="sb-interests"></div>
+      <button class="btn-wrap-up" onclick="endSession()">Wrap up session</button>
+    </aside>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- PHASE 3: SUMMARY                              -->
+<!-- ══════════════════════════════════════════════ -->
+<div class="phase" id="phase-summary">
+  <div class="summary-wrap">
+    <div class="summary-icon">📖</div>
+    <h1>Session complete!</h1>
+    <p>Here's a summary of your reading session, <strong id="sum-name">{{ user_name }}</strong>.</p>
+    <div class="summary-stats">
+      <div class="summary-stat">
+        <strong id="sum-rounds">—</strong>
+        <span>Rounds</span>
+      </div>
+      <div class="summary-stat">
+        <strong id="sum-articles">—</strong>
+        <span>Articles read</span>
+      </div>
+      <div class="summary-stat">
+        <strong id="sum-skips">—</strong>
+        <span>Skips</span>
+      </div>
+    </div>
+    <div class="summary-cats" id="sum-cats"></div>
+    <button class="btn-new-session" onclick="newSession()">Start a new session</button>
+  </div>
+</div>
+
+<script>
+  // ── State ─────────────────────────────────────────────────────
+  let mode       = null;          // 'search' | 'browse'
+  let seedIds    = [];
+  let catFilter  = null;
+  let selectedId = null;
+  let currentRecs = [];
+
+  // ── Phase management ──────────────────────────────────────────
+  function showPhase(id) {
+    document.querySelectorAll('.phase').forEach(p => p.classList.remove('active'));
+    document.getElementById('phase-' + id).classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // ── Toast ─────────────────────────────────────────────────────
+  function toast(msg, duration = 2800) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    setTimeout(() => el.classList.remove('show'), duration);
+  }
+
+  // ── Loading overlay ───────────────────────────────────────────
+  function setLoading(on, text = 'Loading…') {
+    const el = document.getElementById('loading-overlay');
+    document.getElementById('loader-text').textContent = text;
+    el.classList.toggle('show', on);
+  }
+
+  // ── Logout ────────────────────────────────────────────────────
+  async function handleLogout() {
+    await fetch('/api/end-session', { method: 'POST' }).catch(() => {});
+    await fetch('/api/logout', { method: 'POST' });
+    window.location.href = '/';
+  }
+
+  // ── MODE SELECTION ────────────────────────────────────────────
+  function selectMode(m) {
+    mode = m;
+    document.getElementById('opt-search').classList.toggle('selected', m === 'search');
+    document.getElementById('opt-browse').classList.toggle('selected', m === 'browse');
+    document.getElementById('search-box').classList.toggle('visible', m === 'search');
+    document.getElementById('browse-box').classList.toggle('visible', m === 'browse');
+    hideSeedCards(); hideStartBtn();
+    seedIds = []; catFilter = null;
+
+    if (m === 'search') {
+      document.getElementById('search-input').focus();
+    } else {
+      loadCategories();
+    }
+  }
+
+  // ── SEARCH FLOW ───────────────────────────────────────────────
+  async function runSearch() {
+    const query = document.getElementById('search-input').value.trim();
+    if (!query) { toast('Please enter a search term.'); return; }
+    setLoading(true, 'Searching articles…');
+    try {
+      const res  = await fetch('/api/search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query }),
+      });
+      const articles = await res.json();
+      if (!articles.length) { toast('No results found. Try different keywords.'); return; }
+      seedIds   = articles.map(a => a.news_id);
+      catFilter = null;
+      showSeedCards(articles, `Top matches for "${query}"`);
+      showStartBtn();
+    } catch (e) {
+      toast('Search failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // ── BROWSE FLOW ───────────────────────────────────────────────
+  let allCategories = {};
+
+  async function loadCategories() {
+    if (Object.keys(allCategories).length) { populateCatSelect(); return; }
+    setLoading(true, 'Loading categories…');
+    try {
+      const res  = await fetch('/api/categories');
+      allCategories = await res.json();
+      populateCatSelect();
+    } catch (e) {
+      toast('Could not load categories.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function populateCatSelect() {
+    const sel = document.getElementById('cat-select');
+    sel.innerHTML = '<option value="">Select a category…</option>';
+    Object.keys(allCategories).sort().forEach(cat => {
+      const opt = document.createElement('option');
+      opt.value = cat; opt.textContent = cat;
+      sel.appendChild(opt);
+    });
+    document.getElementById('subcat-select').innerHTML = '<option value="">Select a subcategory…</option>';
+    hideSeedCards(); hideStartBtn();
+  }
+
+  function onCatChange() {
+    const cat   = document.getElementById('cat-select').value;
+    const subSel = document.getElementById('subcat-select');
+    subSel.innerHTML = '<option value="">Select a subcategory…</option>';
+    hideSeedCards(); hideStartBtn();
+    if (!cat) return;
+    (allCategories[cat] || []).forEach(sub => {
+      const opt = document.createElement('option');
+      opt.value = sub; opt.textContent = sub;
+      subSel.appendChild(opt);
+    });
+  }
+
+  async function onSubcatChange() {
+    const cat = document.getElementById('cat-select').value;
+    const sub = document.getElementById('subcat-select').value;
+    if (!cat || !sub) { hideSeedCards(); hideStartBtn(); return; }
+    catFilter = cat;
+    // We'll get seed IDs from the server when starting; show placeholder
+    seedIds = [];
+    showBrowsePreview(cat, sub);
+    showStartBtn();
+  }
+
+  function showBrowsePreview(cat, sub) {
+    document.getElementById('seed-label').textContent = `Browsing: ${cat} › ${sub}`;
+    document.getElementById('seed-list').innerHTML =
+      `<div class="seed-card"><div class="seed-info"><div class="seed-title">Top articles from ${sub} will seed your profile.</div><div class="seed-cat">${cat}</div></div></div>`;
+    document.getElementById('seed-cards').classList.add('visible');
+  }
+
+  // ── SEED CARD HELPERS ─────────────────────────────────────────
+  function showSeedCards(articles, label) {
+    document.getElementById('seed-label').textContent = label;
+    const list = document.getElementById('seed-list');
+    list.innerHTML = articles.map((a, i) => `
+      <div class="seed-card">
+        <div class="seed-num">${i+1}</div>
+        <div class="seed-info">
+          <div class="seed-title">${esc(a.title)}</div>
+          <div class="seed-cat">${esc(a.category)} › ${esc(a.subcategory)}</div>
+        </div>
+      </div>`).join('');
+    document.getElementById('seed-cards').classList.add('visible');
+  }
+
+  function hideSeedCards() { document.getElementById('seed-cards').classList.remove('visible'); }
+  function showStartBtn()   { document.getElementById('btn-start').classList.add('visible'); }
+  function hideStartBtn()   { document.getElementById('btn-start').classList.remove('visible'); }
+
+  // ── START SESSION ─────────────────────────────────────────────
+  async function startSession() {
+    setLoading(true, 'Building your profile…');
+    try {
+      let body;
+
+      if (mode === 'browse') {
+        const cat = document.getElementById('cat-select').value;
+        const sub = document.getElementById('subcat-select').value;
+        // Get seed articles for this subcategory via search
+        const sRes  = await fetch('/api/search', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query: sub + ' ' + cat }),
+        });
+        const sArticles = await sRes.json();
+        seedIds   = sArticles.map(a => a.news_id).slice(0, 5);
+        catFilter = cat;
+        body = { seed_ids: seedIds, category: cat };
+      } else {
+        body = { seed_ids: seedIds, category: null };
+      }
+
+      const res = await fetch('/api/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+      if (!res.ok) { toast(data.error || 'Failed to start session.'); return; }
+
+      showPhase('recs');
+      loadRound();
+    } catch (e) {
+      toast('Could not start session. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // ── RECOMMENDATION LOOP ───────────────────────────────────────
+  async function loadRound() {
+    // Show skeletons
+    document.getElementById('skeletons').style.display = 'flex';
+    document.getElementById('article-cards').style.display = 'none';
+    document.getElementById('action-bar').style.display = 'none';
+    selectedId = null;
+
+    try {
+      const res  = await fetch('/api/recommend');
+      const data = await res.json();
+      if (!res.ok) { toast(data.error || 'Error loading recommendations.'); return; }
+
+      currentRecs = data.articles;
+      document.getElementById('round-badge').textContent = `Round ${data.round}`;
+      document.getElementById('recs-title').textContent =
+        data.round === 1 ? 'Your starting picks' : `Round ${data.round} picks`;
+
+      renderCards(data.articles);
+
+      document.getElementById('skeletons').style.display = 'none';
+      document.getElementById('article-cards').style.display = 'flex';
+      document.getElementById('action-bar').style.display = 'flex';
+      document.getElementById('btn-next').disabled = true;
+
+    } catch (e) {
+      toast('Failed to load recommendations.');
+    }
+  }
+
+  function renderCards(articles) {
+    const container = document.getElementById('article-cards');
+    container.innerHTML = articles.map((a, i) => {
+      const expl = a.explanation;
+      const hasExpl = expl && (expl.because || (expl.keywords && expl.keywords.length));
+      const explHtml = hasExpl ? `
+        <div class="card-explanation visible">
+          ${expl.because ? `
+            <div class="explanation-because">
+              <span>↳</span>
+              <span>Because you read: <em>${esc(expl.because.substring(0,70))}${expl.because.length>70?'…':''}</em></span>
+            </div>` : ''}
+          ${expl.keywords && expl.keywords.length ? `
+            <div class="explanation-keywords">
+              ${expl.keywords.map(k => `<span class="keyword-pill">${esc(k)}</span>`).join('')}
+            </div>` : ''}
+        </div>` : '';
+
+      const scoreHtml = a.score > 0
+        ? `<span class="score-pill">score ${a.score.toFixed(3)}</span>`
+        : '';
+
+      const explorTag = a.is_diverse
+        ? '<span class="explore-tag">✦ Explore</span>'
+        : '';
+
+      return `
+        <div class="article-card" id="card-${i}" onclick="selectCard(${i}, '${a.news_id}')">
+          <div class="card-top">
+            <span class="cat-badge">${esc(a.category)}</span>
+            <span class="subcat-badge">${esc(a.subcategory)}</span>
+            ${explorTag}
+            ${scoreHtml}
+          </div>
+          <div class="card-title">${esc(a.title)}</div>
+          <div class="card-abstract">${esc(a.abstract || '—')}</div>
+          ${explHtml}
+        </div>`;
+    }).join('');
+  }
+
+  function selectCard(index, newsId) {
+    // Deselect all
+    document.querySelectorAll('.article-card').forEach(c => c.classList.remove('selected'));
+    // Select clicked
+    document.getElementById('card-' + index).classList.add('selected');
+    selectedId = newsId;
+    document.getElementById('btn-next').disabled = false;
+  }
+
+  // ── NEXT ROUND ────────────────────────────────────────────────
+  async function handleNext() {
+    if (!selectedId) return;
+    const skippedIds = currentRecs
+      .filter(a => a.news_id !== selectedId)
+      .map(a => a.news_id);
+
+    setLoading(true, 'Updating your profile…');
+    try {
+      const res = await fetch('/api/click', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ news_id: selectedId, skipped_ids: skippedIds }),
+      });
+      const data = await res.json();
+      if (res.ok) updateSidebar(data);
+    } catch (e) { /* non-critical */ }
+
+    setLoading(false);
+    await loadRound();
+  }
+
+  function updateSidebar(data) {
+    document.getElementById('sb-count').textContent    = data.history_count || '—';
+    document.getElementById('sb-skips').textContent    = data.total_skipped ?? '—';
+    document.getElementById('sb-dominant').textContent = data.dominant || '—';
+
+    const summary = data.summary || {};
+    const total   = Object.values(summary).reduce((a, b) => a + b, 0) || 1;
+    const sorted  = Object.entries(summary).sort((a, b) => b[1] - a[1]);
+    document.getElementById('sb-interests').innerHTML = sorted.map(([cat, cnt]) => `
+      <div class="interest-row">
+        <div class="interest-name">
+          <span>${esc(cat)}</span>
+          <span>${cnt}</span>
+        </div>
+        <div class="interest-bar">
+          <div class="interest-fill" style="width:${Math.round(cnt/total*100)}%"></div>
+        </div>
+      </div>`).join('');
+  }
+
+  // ── END SESSION ───────────────────────────────────────────────
+  async function endSession() {
+    // If an article is selected, record the click first
+    if (selectedId) {
+      const skippedIds = currentRecs
+        .filter(a => a.news_id !== selectedId)
+        .map(a => a.news_id);
+      await fetch('/api/click', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ news_id: selectedId, skipped_ids: skippedIds }),
+      }).catch(() => {});
+    }
+
+    setLoading(true, 'Saving your history…');
+    try {
+      const res  = await fetch('/api/end-session', { method: 'POST' });
+      const data = await res.json();
+      showSummary(data);
+    } catch (e) {
+      toast('Could not save session.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function showSummary(data) {
+    document.getElementById('sum-rounds').textContent   = data.rounds;
+    document.getElementById('sum-articles').textContent = data.articles_read;
+    document.getElementById('sum-skips').textContent    = data.skips;
+
+    const summary = data.summary || {};
+    const total   = Object.values(summary).reduce((a, b) => a + b, 0) || 1;
+    const sorted  = Object.entries(summary).sort((a, b) => b[1] - a[1]);
+
+    document.getElementById('sum-cats').innerHTML = sorted.length ? `
+      <h3>Categories explored</h3>
+      ${sorted.map(([cat, cnt]) => `
+        <div class="summary-cat-row">
+          <div class="summary-cat-name">
+            <span>${esc(cat)}</span>
+            <span>${cnt} article${cnt>1?'s':''}</span>
+          </div>
+          <div class="summary-cat-bar">
+            <div class="summary-cat-fill" style="width:${Math.round(cnt/total*100)}%"></div>
+          </div>
+        </div>`).join('')}` : '';
+
+    showPhase('summary');
+  }
+
+  function newSession() {
+    seedIds = []; catFilter = null; selectedId = null; currentRecs = [];
+    mode = null;
+    document.getElementById('opt-search').classList.remove('selected');
+    document.getElementById('opt-browse').classList.remove('selected');
+    document.getElementById('search-box').classList.remove('visible');
+    document.getElementById('browse-box').classList.remove('visible');
+    document.getElementById('search-input').value = '';
+    hideSeedCards(); hideStartBtn();
+    document.getElementById('sb-count').textContent = '—';
+    document.getElementById('sb-skips').textContent = '—';
+    document.getElementById('sb-dominant').textContent = '—';
+    document.getElementById('sb-interests').innerHTML = '';
+    showPhase('cold');
+  }
+
+  // ── UTILS ─────────────────────────────────────────────────────
+  function esc(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+</script>
+</body>
+</html>

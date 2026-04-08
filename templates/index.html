@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NewsAI — Your News, Personalized</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #FBFBFD;
+      --bg-alt:    #F5F5F7;
+      --bg-dark:   #1D1D1F;
+      --text:      #1D1D1F;
+      --text-2:    #6E6E73;
+      --text-3:    #86868B;
+      --accent:    #0071E3;
+      --accent-h:  #0077ED;
+      --border:    rgba(0,0,0,0.1);
+      --card:      #FFFFFF;
+      --nav-bg:    rgba(255,255,255,0.85);
+      --r:         18px;
+      --r-sm:      12px;
+      --pill:      980px;
+      --shadow:    0 4px 24px rgba(0,0,0,0.08);
+      --shadow-lg: 0 16px 48px rgba(0,0,0,0.12);
+      --ease:      cubic-bezier(0.4,0,0.2,1);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+      line-height: 1.5;
+    }
+
+    /* ── NAV ───────────────────────────────────────────────────── */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: var(--nav-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      height: 52px;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 24px;
+    }
+    .nav-logo {
+      font-size: 17px; font-weight: 600; color: var(--text);
+      text-decoration: none; letter-spacing: -0.3px;
+    }
+    .nav-links {
+      display: flex; gap: 28px; list-style: none;
+    }
+    .nav-links a {
+      font-size: 13px; color: var(--text-2);
+      text-decoration: none; transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--text); }
+    .nav-cta {
+      display: flex; align-items: center; gap: 12px;
+    }
+    .btn-nav {
+      padding: 7px 16px; border-radius: var(--pill);
+      font-size: 13px; font-weight: 500; cursor: pointer;
+      text-decoration: none; transition: all 0.2s var(--ease);
+      border: none;
+    }
+    .btn-nav-ghost { color: var(--accent); background: transparent; }
+    .btn-nav-ghost:hover { background: rgba(0,113,227,0.08); }
+    .btn-nav-solid { background: var(--accent); color: #fff; }
+    .btn-nav-solid:hover { background: var(--accent-h); }
+
+    /* ── HERO ──────────────────────────────────────────────────── */
+    .hero {
+      text-align: center;
+      padding: 110px 24px 80px;
+      max-width: 900px; margin: 0 auto;
+    }
+    .hero-eyebrow {
+      display: inline-block;
+      font-size: 13px; font-weight: 600; letter-spacing: 0.08em;
+      color: var(--accent); text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+    .hero h1 {
+      font-size: clamp(48px, 7vw, 80px);
+      font-weight: 700; letter-spacing: -2px; line-height: 1.05;
+      color: var(--text); margin-bottom: 22px;
+    }
+    .hero h1 em { font-style: normal; color: var(--accent); }
+    .hero p {
+      font-size: clamp(17px, 2vw, 21px); color: var(--text-2);
+      max-width: 560px; margin: 0 auto 40px; line-height: 1.6;
+    }
+    .hero-btns {
+      display: flex; gap: 14px; justify-content: center; flex-wrap: wrap;
+      margin-bottom: 72px;
+    }
+    .btn-primary {
+      padding: 16px 32px; border-radius: var(--pill);
+      background: var(--accent); color: #fff;
+      font-size: 17px; font-weight: 500; text-decoration: none;
+      border: none; cursor: pointer;
+      transition: all 0.25s var(--ease); display: inline-block;
+    }
+    .btn-primary:hover {
+      background: var(--accent-h);
+      transform: translateY(-1px);
+      box-shadow: 0 8px 24px rgba(0,113,227,0.3);
+    }
+    .btn-secondary {
+      padding: 15px 32px; border-radius: var(--pill);
+      background: transparent; color: var(--accent);
+      font-size: 17px; font-weight: 500; text-decoration: none;
+      border: 1.5px solid var(--accent); cursor: pointer;
+      transition: all 0.25s var(--ease); display: inline-block;
+    }
+    .btn-secondary:hover { background: rgba(0,113,227,0.06); }
+
+    /* Stats bar */
+    .hero-stats {
+      display: flex; gap: 0; justify-content: center;
+      border: 1px solid var(--border); border-radius: var(--r);
+      background: var(--card); overflow: hidden;
+      box-shadow: var(--shadow); max-width: 560px; margin: 0 auto;
+    }
+    .stat-item {
+      flex: 1; padding: 22px 28px; text-align: center;
+      border-right: 1px solid var(--border);
+    }
+    .stat-item:last-child { border-right: none; }
+    .stat-item strong {
+      display: block; font-size: 28px; font-weight: 700;
+      letter-spacing: -1px; color: var(--text);
+    }
+    .stat-item span { font-size: 13px; color: var(--text-2); }
+
+    /* ── SECTION WRAPPER ───────────────────────────────────────── */
+    section { padding: 96px 24px; }
+    .section-label {
+      text-align: center; font-size: 13px; font-weight: 600;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--accent); margin-bottom: 16px;
+    }
+    .section-title {
+      text-align: center; font-size: clamp(32px, 4vw, 48px);
+      font-weight: 700; letter-spacing: -1.5px; line-height: 1.1;
+      color: var(--text); margin-bottom: 14px;
+    }
+    .section-sub {
+      text-align: center; font-size: 19px; color: var(--text-2);
+      max-width: 520px; margin: 0 auto 60px; line-height: 1.6;
+    }
+
+    /* ── FEATURES GRID ─────────────────────────────────────────── */
+    #features { background: var(--bg-alt); }
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 20px; max-width: 1080px; margin: 0 auto;
+    }
+    .feature-card {
+      background: var(--card); border-radius: var(--r);
+      padding: 32px 28px; border: 1px solid var(--border);
+      transition: all 0.3s var(--ease);
+    }
+    .feature-card:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-lg);
+    }
+    .feature-icon {
+      width: 48px; height: 48px; border-radius: 12px;
+      background: rgba(0,113,227,0.1);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; margin-bottom: 18px;
+    }
+    .feature-card h3 {
+      font-size: 18px; font-weight: 600; letter-spacing: -0.3px;
+      margin-bottom: 8px;
+    }
+    .feature-card p { font-size: 15px; color: var(--text-2); line-height: 1.6; }
+
+    /* ── HOW IT WORKS ──────────────────────────────────────────── */
+    .steps {
+      display: grid; grid-template-columns: repeat(3,1fr);
+      gap: 40px; max-width: 900px; margin: 0 auto; position: relative;
+    }
+    .steps::before {
+      content: '';
+      position: absolute; top: 28px; left: calc(16.6% + 28px);
+      right: calc(16.6% + 28px); height: 1px;
+      background: linear-gradient(to right, var(--border), var(--accent), var(--border));
+    }
+    .step { text-align: center; position: relative; }
+    .step-num {
+      width: 56px; height: 56px; border-radius: 50%;
+      background: var(--card); border: 2px solid var(--accent);
+      color: var(--accent); font-size: 20px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 20px; position: relative; z-index: 1;
+    }
+    .step h3 { font-size: 17px; font-weight: 600; margin-bottom: 8px; }
+    .step p   { font-size: 15px; color: var(--text-2); line-height: 1.6; }
+
+    /* ── CTA DARK SECTION ──────────────────────────────────────── */
+    .cta-section {
+      background: var(--bg-dark); text-align: center;
+      padding: 96px 24px;
+    }
+    .cta-section h2 {
+      font-size: clamp(32px, 4vw, 52px); font-weight: 700;
+      letter-spacing: -1.5px; color: #fff; margin-bottom: 18px;
+    }
+    .cta-section p { font-size: 19px; color: #86868B; margin-bottom: 40px; }
+    .btn-white {
+      display: inline-block; padding: 16px 36px; border-radius: var(--pill);
+      background: #fff; color: var(--text);
+      font-size: 17px; font-weight: 500; text-decoration: none;
+      transition: all 0.25s var(--ease);
+    }
+    .btn-white:hover {
+      background: #F5F5F7; transform: translateY(-1px);
+      box-shadow: 0 8px 30px rgba(0,0,0,0.25);
+    }
+
+    /* ── FOOTER ────────────────────────────────────────────────── */
+    footer {
+      background: var(--bg-alt); border-top: 1px solid var(--border);
+      padding: 32px 24px; text-align: center;
+    }
+    footer p { font-size: 13px; color: var(--text-3); }
+
+    @media (max-width: 700px) {
+      .nav-links { display: none; }
+      .steps { grid-template-columns: 1fr; }
+      .steps::before { display: none; }
+      .hero-stats { flex-direction: column; }
+      .stat-item { border-right: none; border-bottom: 1px solid var(--border); }
+      .stat-item:last-child { border-bottom: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="/" class="nav-logo">NewsAI</a>
+  <ul class="nav-links">
+    <li><a href="#features">Features</a></li>
+    <li><a href="#how">How it works</a></li>
+  </ul>
+  <div class="nav-cta">
+    <a href="/auth" class="btn-nav btn-nav-ghost">Log in</a>
+    <a href="/auth?tab=register" class="btn-nav btn-nav-solid">Get started</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero" style="padding-bottom:96px">
+  <div class="hero-eyebrow">Intelligent News Curation</div>
+  <h1>Your news,<br><em>personalized.</em></h1>
+  <p>NewsAI learns what you love and curates a reading experience that's uniquely yours — no noise, no clutter, just what matters to you.</p>
+  <div class="hero-btns">
+    <a href="/auth?tab=register" class="btn-primary">Get Started Free</a>
+    <a href="#features" class="btn-secondary">Learn more</a>
+  </div>
+  <div class="hero-stats">
+    <div class="stat-item">
+      <strong>51K+</strong>
+      <span>Articles</span>
+    </div>
+    <div class="stat-item">
+      <strong>156K+</strong>
+      <span>Readers analyzed</span>
+    </div>
+    <div class="stat-item">
+      <strong>7</strong>
+      <span>Smart features</span>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section id="features">
+  <div class="section-label">What makes NewsAI different</div>
+  <h2 class="section-title">Built to understand you.</h2>
+  <p class="section-sub">Seven intelligent systems work in concert to surface exactly the stories you'd want to read.</p>
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon">🧠</div>
+      <h3>Adaptive Profile</h3>
+      <p>Every article you read updates your taste profile in real time. The more you use it, the smarter it gets.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🔍</div>
+      <h3>Semantic Search</h3>
+      <p>Find articles about any topic in plain English. Type "NBA playoffs" or "federal reserve" — we understand intent, not just keywords.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">💡</div>
+      <h3>Explainable Picks</h3>
+      <p>Every recommendation shows exactly why it was chosen — which article you read, which keywords aligned. No black box.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🌐</div>
+      <h3>Diversity Mode</h3>
+      <p>One slot in every round is reserved for something outside your usual topics — so you never get stuck in a filter bubble.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📈</div>
+      <h3>Popularity Signal</h3>
+      <p>Real click data from 156,965 readers boosts articles that are genuinely worth reading right now.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">👤</div>
+      <h3>Negative Feedback</h3>
+      <p>Articles you skip are down-weighted. Your silence is as informative as your clicks.</p>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section id="how">
+  <div class="section-label">Getting started</div>
+  <h2 class="section-title">Up and running in seconds.</h2>
+  <p class="section-sub">Three steps from sign-up to a personalized feed curated just for you.</p>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <h3>Create your account</h3>
+      <p>Sign up with your email. No credit card required, no setup fees — ever.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <h3>Search or browse</h3>
+      <p>Tell us what you're interested in by searching a topic or browsing by category.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <h3>Read and refine</h3>
+      <p>Click what interests you. With each article, your recommendations improve automatically.</p>
+    </div>
+  </div>
+</section>
+
+<!-- CTA DARK -->
+<div class="cta-section">
+  <h2>Ready to read smarter?</h2>
+  <p>Join thousands of readers who've left the noise behind.</p>
+  <a href="/auth?tab=register" class="btn-white">Create Free Account</a>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <p>NewsAI · Built on the MIND dataset · &copy; 2025</p>
+</footer>
+
+<script>
+  // Highlight nav links on scroll
+  const sections = document.querySelectorAll('section[id], div[id]');
+  // Pass tab param to auth page
+  document.querySelectorAll('a[href*="tab=register"]').forEach(a => {
+    a.addEventListener('click', () => {
+      sessionStorage.setItem('authTab', 'register');
+    });
+  });
+</script>
+</body>
+</html>

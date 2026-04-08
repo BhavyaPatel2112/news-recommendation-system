@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign In — NewsAI</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:      #FBFBFD;
+      --text:    #1D1D1F;
+      --text-2:  #6E6E73;
+      --accent:  #0071E3;
+      --accent-h:#0077ED;
+      --border:  rgba(0,0,0,0.14);
+      --card:    #FFFFFF;
+      --nav-bg:  rgba(255,255,255,0.85);
+      --error:   #FF3B30;
+      --success: #34C759;
+      --pill:    980px;
+      --r:       14px;
+      --ease:    cubic-bezier(0.4,0,0.2,1);
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+      display: flex; flex-direction: column;
+    }
+
+    /* NAV */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: var(--nav-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      height: 52px;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 24px;
+    }
+    .nav-logo {
+      font-size: 17px; font-weight: 600; color: var(--text);
+      text-decoration: none; letter-spacing: -0.3px;
+    }
+    .nav-back {
+      font-size: 13px; color: var(--accent); text-decoration: none;
+      display: flex; align-items: center; gap: 4px;
+    }
+    .nav-back:hover { text-decoration: underline; }
+
+    /* MAIN LAYOUT */
+    main {
+      flex: 1; display: flex; align-items: center; justify-content: center;
+      padding: 48px 24px;
+    }
+
+    /* AUTH CARD */
+    .auth-card {
+      width: 100%; max-width: 420px;
+      background: var(--card);
+      border-radius: 20px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.10);
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+
+    /* TABS */
+    .auth-tabs {
+      display: flex; border-bottom: 1px solid var(--border);
+    }
+    .auth-tab {
+      flex: 1; padding: 18px;
+      text-align: center; font-size: 15px; font-weight: 500;
+      color: var(--text-2); cursor: pointer;
+      background: none; border: none;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s var(--ease);
+      position: relative; top: 1px;
+    }
+    .auth-tab.active {
+      color: var(--text);
+      border-bottom-color: var(--accent);
+    }
+    .auth-tab:hover:not(.active) { color: var(--text); }
+
+    /* FORMS */
+    .auth-forms { padding: 32px; }
+    .auth-form { display: none; }
+    .auth-form.active { display: block; }
+
+    .form-title {
+      font-size: 22px; font-weight: 700; letter-spacing: -0.5px;
+      margin-bottom: 6px;
+    }
+    .form-sub {
+      font-size: 14px; color: var(--text-2); margin-bottom: 28px;
+    }
+
+    .form-group { margin-bottom: 18px; }
+    .form-group label {
+      display: block; font-size: 13px; font-weight: 500;
+      color: var(--text-2); margin-bottom: 7px;
+    }
+    .form-group input {
+      width: 100%; padding: 13px 16px;
+      border: 1.5px solid var(--border); border-radius: 10px;
+      font-size: 16px; color: var(--text);
+      background: var(--bg);
+      outline: none; transition: border-color 0.2s var(--ease);
+      font-family: inherit;
+    }
+    .form-group input:focus { border-color: var(--accent); }
+    .form-group input::placeholder { color: #AEAEB2; }
+
+    /* Error & Success */
+    .msg-box {
+      padding: 12px 16px; border-radius: 10px;
+      font-size: 14px; margin-bottom: 18px;
+      display: none; align-items: center; gap: 8px;
+    }
+    .msg-box.error {
+      background: rgba(255,59,48,0.08);
+      color: var(--error); border: 1px solid rgba(255,59,48,0.2);
+      display: flex;
+    }
+    .msg-box.success {
+      background: rgba(52,199,89,0.08);
+      color: var(--success); border: 1px solid rgba(52,199,89,0.2);
+      display: flex;
+    }
+
+    /* Submit button */
+    .btn-submit {
+      width: 100%; padding: 15px;
+      background: var(--accent); color: #fff;
+      font-size: 16px; font-weight: 600; font-family: inherit;
+      border: none; border-radius: 10px; cursor: pointer;
+      transition: all 0.25s var(--ease);
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      position: relative;
+    }
+    .btn-submit:hover:not(:disabled) {
+      background: var(--accent-h);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(0,113,227,0.35);
+    }
+    .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+    /* Spinner */
+    .spinner {
+      width: 18px; height: 18px;
+      border: 2.5px solid rgba(255,255,255,0.35);
+      border-top-color: #fff; border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      display: none;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .form-footer {
+      text-align: center; margin-top: 22px;
+      font-size: 14px; color: var(--text-2);
+    }
+    .form-footer a {
+      color: var(--accent); text-decoration: none; font-weight: 500;
+    }
+    .form-footer a:hover { text-decoration: underline; }
+
+    /* Password strength (register only) */
+    .pw-strength {
+      height: 3px; border-radius: 2px; background: var(--border);
+      margin-top: 8px; overflow: hidden;
+    }
+    .pw-strength-bar {
+      height: 100%; border-radius: 2px;
+      transition: width 0.3s var(--ease), background 0.3s;
+      width: 0%;
+    }
+
+    @media (max-width: 480px) {
+      .auth-forms { padding: 24px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="nav-logo">NewsAI</a>
+  <a href="/" class="nav-back">← Back to home</a>
+</nav>
+
+<main>
+  <div class="auth-card">
+    <!-- Tabs -->
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tab-login" onclick="switchTab('login')">Log in</button>
+      <button class="auth-tab" id="tab-register" onclick="switchTab('register')">Create account</button>
+    </div>
+
+    <div class="auth-forms">
+
+      <!-- LOGIN FORM -->
+      <div class="auth-form active" id="form-login">
+        <div class="form-title">Welcome back</div>
+        <div class="form-sub">Sign in to your NewsAI account.</div>
+
+        <div class="msg-box" id="login-msg"></div>
+
+        <div class="form-group">
+          <label for="login-email">Email address</label>
+          <input type="email" id="login-email" placeholder="you@example.com" autocomplete="email" />
+        </div>
+        <div class="form-group">
+          <label for="login-password">Password</label>
+          <input type="password" id="login-password" placeholder="Your password" autocomplete="current-password" />
+        </div>
+        <button class="btn-submit" id="login-btn" onclick="handleLogin()">
+          <span class="spinner" id="login-spinner"></span>
+          <span id="login-btn-text">Sign in</span>
+        </button>
+        <div class="form-footer">
+          Don't have an account? <a href="#" onclick="switchTab('register'); return false;">Create one</a>
+        </div>
+      </div>
+
+      <!-- REGISTER FORM -->
+      <div class="auth-form" id="form-register">
+        <div class="form-title">Create your account</div>
+        <div class="form-sub">Start your personalized news experience.</div>
+
+        <div class="msg-box" id="register-msg"></div>
+
+        <div class="form-group">
+          <label for="register-name">Full name</label>
+          <input type="text" id="register-name" placeholder="Bhavya Patel" autocomplete="name" />
+        </div>
+        <div class="form-group">
+          <label for="register-email">Email address</label>
+          <input type="email" id="register-email" placeholder="you@example.com" autocomplete="email" />
+        </div>
+        <div class="form-group">
+          <label for="register-password">Password</label>
+          <input type="password" id="register-password" placeholder="At least 6 characters"
+                 autocomplete="new-password" oninput="updatePwStrength(this.value)" />
+          <div class="pw-strength"><div class="pw-strength-bar" id="pw-bar"></div></div>
+        </div>
+        <button class="btn-submit" id="register-btn" onclick="handleRegister()">
+          <span class="spinner" id="register-spinner"></span>
+          <span id="register-btn-text">Create account</span>
+        </button>
+        <div class="form-footer">
+          Already have an account? <a href="#" onclick="switchTab('login'); return false;">Log in</a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</main>
+
+<script>
+  // Read tab from sessionStorage (set by index.html "Get started" links)
+  const storedTab = sessionStorage.getItem('authTab');
+  if (storedTab) { sessionStorage.removeItem('authTab'); switchTab(storedTab); }
+
+  // Also read from URL param e.g. /auth?tab=register
+  const urlTab = new URLSearchParams(location.search).get('tab');
+  if (urlTab) switchTab(urlTab);
+
+  function switchTab(tab) {
+    document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
+    document.getElementById('tab-' + tab).classList.add('active');
+    document.getElementById('form-' + tab).classList.add('active');
+  }
+
+  function setLoading(prefix, on) {
+    document.getElementById(prefix + '-spinner').style.display = on ? 'block' : 'none';
+    document.getElementById(prefix + '-btn-text').style.display = on ? 'none' : 'inline';
+    document.getElementById(prefix + '-btn').disabled = on;
+  }
+
+  function showMsg(prefix, type, text) {
+    const el = document.getElementById(prefix + '-msg');
+    el.className = 'msg-box ' + type;
+    el.textContent = text;
+    el.style.display = 'flex';
+  }
+
+  function clearMsg(prefix) {
+    const el = document.getElementById(prefix + '-msg');
+    el.style.display = 'none';
+    el.className = 'msg-box';
+  }
+
+  async function handleLogin() {
+    clearMsg('login');
+    const email    = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value.trim();
+    if (!email || !password) {
+      showMsg('login', 'error', 'Please enter your email and password.'); return;
+    }
+    setLoading('login', true);
+    try {
+      const res = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) { showMsg('login', 'error', data.error); return; }
+      showMsg('login', 'success', `Welcome back, ${data.name}!`);
+      setTimeout(() => { window.location.href = '/app'; }, 500);
+    } catch (e) {
+      showMsg('login', 'error', 'Something went wrong. Please try again.');
+    } finally {
+      setLoading('login', false);
+    }
+  }
+
+  async function handleRegister() {
+    clearMsg('register');
+    const name     = document.getElementById('register-name').value.trim();
+    const email    = document.getElementById('register-email').value.trim();
+    const password = document.getElementById('register-password').value.trim();
+    if (!name || !email || !password) {
+      showMsg('register', 'error', 'Please fill in all fields.'); return;
+    }
+    setLoading('register', true);
+    try {
+      const res = await fetch('/api/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) { showMsg('register', 'error', data.error); return; }
+      showMsg('register', 'success', `Account created! Welcome, ${data.name}.`);
+      setTimeout(() => { window.location.href = '/app'; }, 600);
+    } catch (e) {
+      showMsg('register', 'error', 'Something went wrong. Please try again.');
+    } finally {
+      setLoading('register', false);
+    }
+  }
+
+  function updatePwStrength(pw) {
+    const bar = document.getElementById('pw-bar');
+    let strength = 0;
+    if (pw.length >= 6)  strength += 33;
+    if (pw.length >= 10) strength += 33;
+    if (/[^a-zA-Z0-9]/.test(pw) || /[0-9]/.test(pw)) strength += 34;
+    bar.style.width  = strength + '%';
+    bar.style.background = strength < 40 ? '#FF3B30' : strength < 80 ? '#FF9F0A' : '#34C759';
+  }
+
+  // Enter key support
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Enter') return;
+    if (document.getElementById('form-login').classList.contains('active')) handleLogin();
+    else handleRegister();
+  });
+</script>
+</body>
+</html>
