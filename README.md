@@ -40,15 +40,15 @@ It starts with a simple seed, learns from what you read, penalizes what you igno
 
 ### Landing Page
 
-![NewsAI landing page](UI%20Screenshots/Screenshot%202026-04-08%20at%2017.16.36.png)
+![NewsAI landing page](assets/readme/landing-page.png)
 
 ### Cold Start Experience
 
-![NewsAI cold start search and browse flow](UI%20Screenshots/Screenshot%202026-04-08%20at%2017.17.59.png)
+![NewsAI cold start search and browse flow](assets/readme/cold-start.png)
 
 ### Adaptive Recommendation Rounds
 
-![NewsAI recommendation rounds with preference progression](UI%20Screenshots/Screenshot%202026-04-08%20at%2017.19.03.png)
+![NewsAI recommendation rounds with preference progression](assets/readme/recommendation-rounds.png)
 
 ## What The App Does
 
@@ -329,5 +329,3 @@ It combines:
 - immediate feedback loops
 - explainable recommendations
 - strong UI identity
-
-That makes it a solid portfolio project for showing machine learning intuition, product thinking, and full-stack execution in one place.
