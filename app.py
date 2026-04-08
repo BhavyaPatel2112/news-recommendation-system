@@ -255,6 +255,10 @@ def interest_summary(clicked_ids):
 def index():
     return render_template("index.html")
 
+@app.route("/features")
+def features():
+    return render_template("features.html")
+
 @app.route("/auth")
 def auth():
     if "user_email" in session:
@@ -321,6 +325,18 @@ def api_me():
     return jsonify({"name": u["name"], "email": u["email"]})
 
 # ── Recommender API ────────────────────────────────────────────────────────────
+@app.route("/api/sample-articles")
+def api_sample_articles():
+    """Return a small random sample of articles for the landing page."""
+    sample = news_df[news_df["abstract"].str.len() > 40].sample(n=9, random_state=None)
+    return jsonify([{
+        "news_id":     row["news_id"],
+        "title":       row["title"],
+        "abstract":    row["abstract"][:140] + ("…" if len(row["abstract"]) > 140 else ""),
+        "category":    row["category"],
+        "subcategory": row["subcategory"],
+    } for _, row in sample.iterrows()])
+
 @app.route("/api/categories")
 def api_categories():
     return jsonify(CATEGORIES)
@@ -342,12 +358,14 @@ def api_start():
         return jsonify({"error": "Could not build profile from seeds."}), 400
     sid = str(uuid.uuid4())
     rec_sessions[sid] = {
-        "clicked_ids":   seed_ids[:],
+        "seed_ids":      seed_ids[:],
+        "clicked_ids":   [],
         "profile":       profile.tolist(),
         "total_skipped": 0,
         "round":         0,
         "cat_filter":    cat_filter,
         "log":           [],
+        "pref_history":  [],
     }
     session["rec_sid"] = sid
     return jsonify({"ok": True})
@@ -359,17 +377,18 @@ def api_recommend():
     if not rs:
         return jsonify({"error": "No active session. Please start again."}), 400
     profile     = np.array(rs["profile"])
-    clicked_ids = rs["clicked_ids"]
+    exclude_ids = rs["seed_ids"] + rs["clicked_ids"]
     cat_filter  = rs["cat_filter"]
     rs["round"] += 1
-    recs = get_recs(profile, clicked_ids, category=cat_filter)
+    recs = get_recs(profile, exclude_ids, category=cat_filter)
     if not recs:
         rs["cat_filter"] = None
-        recs = get_recs(profile, clicked_ids)
-    recs = inject_diversity(recs, clicked_ids)
+        recs = get_recs(profile, exclude_ids)
+    recs = inject_diversity(recs, exclude_ids)
+    all_clicks = rs["seed_ids"] + rs["clicked_ids"]
     if rs["round"] > 1:
         for rec in recs:
-            rec["explanation"] = make_explanation(rec, clicked_ids)
+            rec["explanation"] = make_explanation(rec, all_clicks)
     return jsonify({"round": rs["round"], "articles": recs})
 
 @app.route("/api/click", methods=["POST"])
@@ -381,9 +400,10 @@ def api_click():
     d           = request.json or {}
     clicked_id  = d.get("news_id")
     skipped_ids = d.get("skipped_ids", [])
-    if clicked_id not in rs["clicked_ids"]:
+    if clicked_id not in rs["clicked_ids"] and clicked_id not in rs["seed_ids"]:
         rs["clicked_ids"].append(clicked_id)
-    profile = build_profile(rs["clicked_ids"])
+    all_clicks = rs["seed_ids"] + rs["clicked_ids"]
+    profile = build_profile(all_clicks)
     if skipped_ids:
         rs["total_skipped"] += len(skipped_ids)
         profile = neg_feedback(profile, skipped_ids)
@@ -394,10 +414,15 @@ def api_click():
         "skipped_count": len(skipped_ids),
     })
     info = interest_summary(rs["clicked_ids"])
+    rs["pref_history"].append({
+        "round":      rs["round"],
+        "categories": info.get("summary", {}),
+    })
     return jsonify({
         "ok":             True,
         "history_count":  len(rs["clicked_ids"]),
         "total_skipped":  rs["total_skipped"],
+        "pref_history":   rs["pref_history"],
         **info,
     })
 
@@ -406,7 +431,7 @@ def api_end_session():
     sid         = session.get("rec_sid")
     rs          = rec_sessions.get(sid, {}) if sid else {}
     clicked_ids = rs.get("clicked_ids", [])
-    # Persist reading history
+    # Persist reading history (only actual user clicks, not seeds)
     if "user_email" in session and clicked_ids:
         ud = _load_users()
         for u in ud["users"]:
@@ -425,7 +450,7 @@ def api_end_session():
     return jsonify({
         "ok":           True,
         "rounds":       rs.get("round", 0),
-        "articles_read": len(clicked_ids),
+        "articles_read": len(clicked_ids),  # actual user clicks only
         "skips":        rs.get("total_skipped", 0),
         **info,
         "log":          rs.get("log", []),
