@@ -23,3 +23,7 @@ venv/
 # VS Code settings
 .vscode/
 
+# Sensitive files
+.secret_key
+users.json
+
