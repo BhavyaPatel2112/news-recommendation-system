@@ -1,46 +1,77 @@
+<div align="center">
+
 # NewsAI
 
-An editorial-style news recommendation web app built with Flask, TF-IDF, and the Microsoft MIND Small dataset.
+### A newspaper-style recommendation engine that learns your taste in real time
 
-NewsAI learns from what a user reads, what they skip, and how their interests evolve across a session. Instead of showing a static feed, it builds a live preference profile and updates recommendations round by round.
+<p>
+  <img src="https://img.shields.io/badge/Flask-Web_App-111111?style=flat-square" alt="Flask">
+  <img src="https://img.shields.io/badge/scikit--learn-TF--IDF%20Recommender-8B1A1A?style=flat-square" alt="scikit-learn">
+  <img src="https://img.shields.io/badge/Dataset-MIND%20Small-E9E4D8?style=flat-square" alt="MIND Small">
+  <img src="https://img.shields.io/badge/Frontend-Jinja%20%2B%20Vanilla%20JS-3F3A34?style=flat-square" alt="Frontend">
+</p>
 
-## Overview
+<p>
+  NewsAI turns article clicks, skips, and topic drift into a living personal edition.
+</p>
 
-This project combines a lightweight recommender system with a polished newspaper-inspired interface. A user can begin in two ways:
+</div>
 
-- Search for a topic they care about
-- Browse by category and subcategory
+---
 
-Those starting choices seed an initial profile. From there, every article the user opens becomes positive feedback, every non-selected recommendation becomes negative feedback, and the system generates the next round of suggestions.
+## The Idea
 
-At a high level, NewsAI is designed to answer a simple question:
+Most feeds optimize for what is popular.
 
-How can we make news recommendations feel personal, transparent, and adaptive without requiring a heavy deep-learning pipeline?
+NewsAI tries to optimize for what feels yours.
+
+It starts with a simple seed, learns from what you read, penalizes what you ignore, blends relevance with popularity and recency, and keeps one slot open for exploration so the experience does not become repetitive too quickly.
+
+## At A Glance
+
+| What it is | Why it stands out |
+| --- | --- |
+| A Flask-based personalized news recommender | Feels like a digital broadsheet instead of a standard dashboard |
+| A content-based ranking engine using TF-IDF and cosine similarity | Updates after every interaction inside the same session |
+| A session-aware experience with history tracking | Explains recommendations with similarity cues and keywords |
+| A MIND Small dataset project | Includes search cold start, category browse, and diversity injection |
+
+## Visual Tour
+
+### Landing Page
+
+![NewsAI landing page](UI%20Screenshots/Screenshot%202026-04-08%20at%2017.16.36.png)
+
+### Cold Start Experience
+
+![NewsAI cold start search and browse flow](UI%20Screenshots/Screenshot%202026-04-08%20at%2017.17.59.png)
+
+### Adaptive Recommendation Rounds
+
+![NewsAI recommendation rounds with preference progression](UI%20Screenshots/Screenshot%202026-04-08%20at%2017.19.03.png)
 
 ## What The App Does
 
-NewsAI provides:
+NewsAI gives users a full end-to-end reading loop:
 
-- User registration and login
-- Cold-start onboarding for new users
-- Content-based recommendations using TF-IDF and cosine similarity
-- Negative feedback handling for skipped articles
-- Ranking that blends similarity, popularity, and recency
-- A diversity injection step to reduce repetitive feeds
-- Recommendation explanations such as "Because you read..."
-- Session-level preference tracking and summary views
-- Persistent reading history stored locally per user
+- Register or sign in
+- Start with search or category browsing
+- Generate a personalized first edition
+- Learn from each click and skip
+- Explain why stories were recommended
+- Track preference shifts across rounds
+- Save reading history at the end of a session
 
 ## How It Works
 
 ### 1. Dataset loading
 
-On startup, the app loads:
+At startup, the app reads:
 
-- `MINDsmall_train/news.tsv` for article metadata
-- `MINDsmall_train/behaviors.tsv` for historical user behavior
+- `MINDsmall_train/news.tsv`
+- `MINDsmall_train/behaviors.tsv`
 
-It builds a working article table containing:
+It then builds a working article table with:
 
 - `news_id`
 - `category`
@@ -48,134 +79,138 @@ It builds a working article table containing:
 - `title`
 - `abstract`
 - `url`
-- combined text content (`title + abstract`)
+- a combined `content` field from title and abstract
 
 ### 2. Popularity and recency signals
 
-The app scans the behavior logs and counts clicked impressions to estimate article popularity.
+Historical clicked impressions from `behaviors.tsv` are counted to estimate popularity.
 
-- `popularity_score` is normalized from observed click counts
-- `recency_score` is approximated from the article row index within the dataset
+- `popularity_score` is normalized from click counts
+- `recency_score` is approximated from article order in the dataset
 
-These scores are later blended into the final recommendation score.
+Those values are later mixed into the final ranking.
 
 ### 3. Text representation
 
-All articles are vectorized with `TfidfVectorizer(stop_words="english", max_features=5000)`.
+The app vectorizes article text using:
 
-This produces:
+`TfidfVectorizer(stop_words="english", max_features=5000)`
 
-- a TF-IDF matrix for all articles
-- a feature vocabulary used later for keyword-based explanations
-- a fast mapping from `news_id` to matrix index
+That gives the system:
+
+- a TF-IDF matrix for all news items
+- a vocabulary for keyword explanations
+- fast lookup from `news_id` to vector index
 
 ### 4. User profile construction
 
-When a session starts, the system builds a profile vector from seed articles. As the user continues reading, the profile is rebuilt from:
+The profile starts from seed articles and keeps evolving.
 
-- the initial seed articles
-- all clicked articles in the current session
+It is rebuilt from:
 
-Recent clicks are weighted more heavily than earlier ones, so the profile can shift as the session evolves.
+- the original seed articles
+- everything the user has clicked in the current session
+
+More recent clicks are weighted more heavily, so the profile adapts instead of staying frozen.
 
 ### 5. Negative feedback
 
-Whenever a user opens one article from a recommendation round, the remaining articles from that round are treated as skipped. Their vectors are subtracted from the active profile with a small penalty weight.
+When the user opens one story from a recommendation round, the rest of that round is treated as skipped.
 
-That means the system does not only learn what the user likes; it also learns what they ignored.
+Those skipped article vectors are subtracted from the profile with a light penalty, which means the model learns both:
+
+- what the user likes
+- what the user ignored
 
 ### 6. Recommendation scoring
 
-Candidate articles are ranked with a weighted combination of:
+Candidates are ranked using:
 
 `score = 0.8 × similarity + 0.1 × recency + 0.1 × popularity`
 
 Where:
 
-- `similarity` comes from cosine similarity between the user profile and article TF-IDF vectors
-- `recency` is the normalized recency proxy
-- `popularity` is the normalized click popularity from behavior data
+- `similarity` comes from cosine similarity between the profile vector and article vectors
+- `recency` is the normalized freshness proxy
+- `popularity` is the normalized click-based popularity score
 
 ### 7. Diversity injection
 
-After ranking, the app intentionally reserves one slot for a different subcategory. This prevents the feed from collapsing too aggressively into one narrow topic and creates a lightweight exploration path.
+After ranking, the system deliberately keeps one slot for a story from a different subcategory.
+
+That one small decision helps the feed feel less narrow and adds exploration without breaking personalization.
 
 ### 8. Explainability
 
-From round 2 onward, recommendations can include:
+From round 2 onward, the app can explain a recommendation using:
 
-- the previously read article most similar to the recommendation
-- top TF-IDF keywords associated with the recommended article
+- the previously read article it most resembles
+- top TF-IDF keywords from the recommended article
 
-This gives users a visible reason for why an article appeared in their feed.
+This makes the model easier to trust because the reasoning is visible on screen.
 
 ## User Flow
 
 ### Landing page
 
-The home page introduces the product in a newspaper-style layout and shows sample articles pulled from the dataset.
+The home page introduces the product with a newspaper-inspired layout and sample articles pulled from the dataset.
 
 ### Authentication
 
-Users can register or sign in. Accounts are stored locally in `users.json`, and passwords are hashed with SHA-256 before storage.
+Users can register or sign in. Accounts are stored in `users.json`, and passwords are hashed before storage.
 
 ### Cold start
 
-Inside the app, the user chooses one of two onboarding modes:
+Users can begin in two ways:
 
-- Search mode: enter a topic, then use the top matching articles as seeds
-- Browse mode: choose a category and subcategory, then seed from matching search results and apply a category filter
+- Search mode: type a topic and seed the profile from the top matching stories
+- Browse mode: choose a category and subcategory, then seed the session from relevant stories while applying a category filter
 
 ### Recommendation rounds
 
-Each round shows:
+Each round includes:
 
-- one lead article
-- several supporting recommendations
-- one optional "Explore" article for diversity
+- one lead story
+- several supporting stories
+- one optional explore story for diversity
 
-Selecting an article updates the profile and loads the next round.
+Opening an article updates the profile and triggers the next round.
 
 ### Profile feedback
 
-As the session progresses, the interface shows:
+As the session continues, the UI surfaces:
 
-- number of articles read
-- number of skipped items
-- dominant category
-- a compact interest summary
-- a preference progression chart across rounds
+- articles read
+- skipped recommendations
+- dominant topic
+- compact interest summary
+- preference progression chart across rounds
 
 ### Session summary
 
-Ending a session saves clicked articles into the user's persistent history and displays a summary of:
-
-- total rounds
-- total articles read
-- total skips
-- categories explored
+Ending a session saves clicked articles to the user's persistent history and shows a summary of reading behavior and explored categories.
 
 ## Core Features
 
 ### Adaptive recommendations
 
-The model updates after every interaction instead of waiting for a full retrain.
+The model updates after every interaction rather than waiting for an offline retrain.
 
-### Strong cold-start handling
+### Cold-start onboarding
 
-New users can begin immediately through search or browsing, without needing a long history first.
+Users can get useful recommendations immediately, even with no prior history.
 
 ### Transparent recommendations
 
-The system exposes recommendation reasons and keywords instead of acting like a black box.
+The system shows recommendation reasons and keywords instead of behaving like a black box.
 
-### Diversity-aware feed design
+### Diversity-aware ranking
 
-The deliberate "Explore" slot helps reduce narrow repetition and encourages broader discovery.
+The explore slot keeps the feed from collapsing too quickly into a single narrow topic.
 
-### Editorial UI
+### Editorial presentation
 
-The front end is intentionally styled like a digital broadsheet rather than a generic dashboard, which makes the recommendation output feel more like a curated edition.
+The interface is intentionally designed like a broadsheet, which makes the output feel curated rather than algorithmically dumped.
 
 ## Project Structure
 
@@ -253,7 +288,7 @@ Expected files used by the app:
 - `news.tsv`
 - `behaviors.tsv`
 
-The repository currently ignores the dataset directory and large `.tsv` files in `.gitignore`, which is useful for GitHub because these files are too large to commit normally.
+The repo already ignores the dataset directory and large `.tsv` files in `.gitignore`, which makes it safer to publish the codebase on GitHub without committing the raw dataset.
 
 ### 5. Run the app
 
@@ -267,17 +302,9 @@ Then open:
 http://localhost:5000
 ```
 
-## Notes About Runtime
-
-- The app precomputes TF-IDF vectors at startup, so initial launch can take a little time
-- The code comments mention TF-IDF fitting may take around 30 seconds depending on machine speed
-- Session state is stored in memory during runtime
-- User account data and persistent reading history are stored locally in `users.json`
-- The Flask secret key is persisted in `.secret_key` so browser sessions survive server restarts
-
 ## API Surface
 
-The backend exposes simple JSON endpoints that drive the UI:
+The frontend is powered by a small JSON API:
 
 - `POST /api/register`
 - `POST /api/login`
@@ -293,45 +320,14 @@ The backend exposes simple JSON endpoints that drive the UI:
 
 ## Why This Project Is Interesting
 
-This project is a good example of how far a recommendation system can go with clean interaction design and thoughtful ranking logic, even without neural recommenders or large-scale infrastructure.
+NewsAI is interesting because it does more than demonstrate a recommender formula. It turns that formula into an actual product experience.
 
 It combines:
 
 - classical NLP
 - session-based personalization
-- transparent UX
-- behavior-aware ranking
-- a clear end-to-end product experience
+- immediate feedback loops
+- explainable recommendations
+- strong UI identity
 
-That makes it useful both as a working application and as a portfolio project that demonstrates product thinking, machine learning intuition, and full-stack implementation.
-
-## Current Limitations
-
-- Authentication is local and file-based, not production-grade
-- Password hashing uses plain SHA-256 without salting
-- Session storage is in memory, so active recommendation sessions reset if the process stops
-- Recency is approximated from dataset ordering rather than article publish timestamps
-- The recommender is content-based, so it does not yet use collaborative filtering or learned embeddings
-- Some original article URLs in the dataset may no longer be live
-
-## Future Improvements
-
-- Move user storage to a real database
-- Add salted password hashing with a stronger password library
-- Persist recommendation sessions beyond process memory
-- Add hybrid recommendations that combine content and collaborative signals
-- Improve recency with explicit publication timestamps
-- Add evaluation metrics such as precision@k, diversity, novelty, and session retention
-- Deploy the app publicly with production-ready configuration
-
-## Screenshots
-
-The repository already includes UI captures in `UI Screenshots/`, which can be added to the GitHub presentation section later if you want to curate a visual gallery.
-
-## Author
-
-Bhavya Patel
-
-## License
-
-Add your preferred license here before publishing to GitHub.
+That makes it a solid portfolio project for showing machine learning intuition, product thinking, and full-stack execution in one place.
