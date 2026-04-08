@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NewsAI — How It Works</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:     #F5F5F0;
+      --bg-2:   #ECEAE4;
+      --bg-3:   #E2E0D8;
+      --text:   #111111;
+      --text-2: #484038;
+      --text-3: #8A8078;
+      --red:    #8B1A1A;
+      --rule:   rgba(17,11,9,0.12);
+      --rule-2: rgba(17,11,9,0.22);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: Georgia, 'Times New Roman', serif;
+      background: var(--bg);
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+      line-height: 1.5;
+    }
+
+    /* ── MASTHEAD ──────────────────────────────────────── */
+    .masthead {
+      background: var(--bg);
+      border-bottom: 3px double var(--rule-2);
+      padding: 0 48px;
+      position: sticky; top: 0; z-index: 100;
+    }
+    .masthead-top {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 0 13px; border-bottom: 1px solid var(--rule);
+    }
+    .masthead-nav {
+      display: flex; gap: 28px; list-style: none;
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+      font-size: 11px; letter-spacing: 0.09em; text-transform: uppercase;
+    }
+    .masthead-nav a { color: var(--text-2); text-decoration: none; transition: color 0.2s; }
+    .masthead-nav a:hover, .masthead-nav a.active { color: var(--text); }
+    .masthead-logo {
+      font-size: 46px; font-weight: 700; letter-spacing: -2px;
+      color: var(--text); text-decoration: none; line-height: 1;
+    }
+    .masthead-actions {
+      display: flex; align-items: center; gap: 14px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+    }
+    .btn-signin {
+      font-size: 11px; letter-spacing: 0.09em; text-transform: uppercase;
+      color: var(--text-2); text-decoration: none; transition: color 0.2s;
+    }
+    .btn-signin:hover { color: var(--text); }
+    .btn-start {
+      font-size: 11px; letter-spacing: 0.09em; text-transform: uppercase;
+      background: var(--red); color: #fff;
+      padding: 8px 20px; text-decoration: none; font-weight: 700;
+      transition: background 0.2s;
+    }
+    .btn-start:hover { background: #6e1414; }
+    .masthead-tagline {
+      text-align: center; padding: 7px 0 9px;
+      font-size: 11px; letter-spacing: 0.13em; text-transform: uppercase;
+      color: var(--text-3);
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+    }
+
+    /* ── PAGE HEADER ─────────────────────────────────── */
+    .page-header {
+      padding: 64px 48px 48px;
+      border-bottom: 3px double var(--rule-2);
+      display: flex; align-items: flex-end; justify-content: space-between; gap: 40px;
+    }
+    .page-header-left {}
+    .page-eyebrow {
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+      font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--red); margin-bottom: 16px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .page-eyebrow::before { content:''; width:24px; height:1px; background:var(--red); }
+    .page-header h1 {
+      font-size: clamp(36px, 4vw, 56px);
+      font-weight: 700; letter-spacing: -2px; line-height: 1.05;
+    }
+    .page-header-desc {
+      font-size: 17px; color: var(--text-2); line-height: 1.7;
+      max-width: 420px; margin-top: 16px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+    }
+    .page-header-cta {
+      flex-shrink: 0;
+    }
+    .btn-primary {
+      display: inline-block;
+      background: var(--red); color: #fff;
+      padding: 14px 32px; font-size: 12px;
+      letter-spacing: 0.09em; text-transform: uppercase;
+      text-decoration: none; font-weight: 700;
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+      transition: background 0.2s;
+    }
+    .btn-primary:hover { background: #6e1414; }
+
+    /* ── FEATURES GRID ─────────────────────────────────── */
+    .features-section {
+      padding: 0 48px 64px;
+    }
+    .features-row-label {
+      display: flex; align-items: center; gap: 16px;
+      padding: 24px 0 0;
+      border-top: 2px solid var(--rule-2);
+    }
+    .features-row-label span {
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+      font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase;
+      color: var(--text-3); white-space: nowrap;
+    }
+    .features-row-rule { flex:1; height:1px; background:var(--rule); }
+
+    .features-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      border-left: 1px solid var(--rule);
+      border-bottom: 1px solid var(--rule);
+      margin-bottom: 0;
+    }
+    .features-divider {
+      border-top: 2px solid var(--rule-2);
+      margin: 0;
+    }
+    .feature-cell {
+      padding: 32px 32px;
+      border-right: 1px solid var(--rule);
+      border-top: 1px solid var(--rule);
+    }
+    .feature-num {
+      font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase;
+      color: var(--red); margin-bottom: 14px; font-weight: 700;
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+    }
+    .feature-cell h3 {
+      font-size: 20px; font-weight: 700; letter-spacing: -0.4px; margin-bottom: 10px;
+    }
+    .feature-cell p {
+      font-size: 14px; color: var(--text-2); line-height: 1.75;
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+    }
+    .feature-cell .feature-detail {
+      margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--rule);
+      font-size: 12px; color: var(--text-3); line-height: 1.6;
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+      font-style: italic;
+    }
+
+    /* ── CTA STRIP ─────────────────────────────────────── */
+    .cta-strip {
+      margin: 0 48px 64px;
+      border: 2px solid var(--rule-2);
+      padding: 40px 40px;
+      display: flex; align-items: center; justify-content: space-between; gap: 32px;
+    }
+    .cta-strip-text h2 {
+      font-size: 26px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 8px;
+    }
+    .cta-strip-text p {
+      font-size: 15px; color: var(--text-2); line-height: 1.6;
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+    }
+    .cta-strip-actions {
+      display: flex; gap: 16px; align-items: center; flex-shrink: 0;
+    }
+    .btn-secondary {
+      display: inline-block;
+      border: 1.5px solid var(--text);
+      padding: 12px 28px; font-size: 11px;
+      letter-spacing: 0.09em; text-transform: uppercase;
+      text-decoration: none; font-weight: 700; color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+      transition: background 0.2s, color 0.2s;
+    }
+    .btn-secondary:hover { background: var(--text); color: var(--bg); }
+
+    /* ── FOOTER ────────────────────────────────────────── */
+    footer {
+      border-top: 3px double var(--rule-2);
+      padding: 22px 48px; text-align: center;
+    }
+    footer p {
+      font-size: 11px; color: var(--text-3); letter-spacing: 0.08em; text-transform: uppercase;
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+    }
+
+    @media (max-width: 900px) {
+      .masthead, .page-header, .features-section, .cta-strip, footer { padding-left: 24px; padding-right: 24px; }
+      .masthead-nav { display: none; }
+      .page-header { flex-direction: column; align-items: flex-start; gap: 24px; }
+      .features-grid { grid-template-columns: 1fr 1fr; }
+      .cta-strip { flex-direction: column; align-items: flex-start; }
+    }
+    @media (max-width: 600px) {
+      .features-grid { grid-template-columns: 1fr; }
+      .cta-strip { margin: 0 24px 48px; padding: 28px 24px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- MASTHEAD -->
+<header class="masthead">
+  <div class="masthead-top">
+    <ul class="masthead-nav">
+      <li><a href="/features" class="active">Features</a></li>
+      <li><a href="/auth">Sign in</a></li>
+    </ul>
+    <a href="/" class="masthead-logo">NewsAI</a>
+    <div class="masthead-actions">
+      <a href="/auth" class="btn-signin">Sign in</a>
+      <a href="/auth?tab=register" class="btn-start">Get started</a>
+    </div>
+  </div>
+  <div class="masthead-tagline">
+    Intelligent news curation &nbsp;·&nbsp; Learns with every click &nbsp;·&nbsp; Built on the MIND dataset
+  </div>
+</header>
+
+<!-- PAGE HEADER -->
+<div class="page-header">
+  <div class="page-header-left">
+    <div class="page-eyebrow">How it works</div>
+    <h1>Seven systems,<br>one perfect feed.</h1>
+    <p class="page-header-desc">Each mechanism works independently. Together they produce a feed that feels handpicked — because it is.</p>
+  </div>
+  <div class="page-header-cta">
+    <a href="/auth?tab=register" class="btn-primary">Start reading →</a>
+  </div>
+</div>
+
+<!-- FEATURES -->
+<section class="features-section">
+
+  <!-- Row 1 label -->
+  <div class="features-row-label">
+    <span>Understanding you</span>
+    <div class="features-row-rule"></div>
+  </div>
+
+  <div class="features-grid">
+    <div class="feature-cell">
+      <div class="feature-num">01</div>
+      <h3>Adaptive Profile</h3>
+      <p>Updates in real time with every click and every skip. Gets smarter the longer you use it.</p>
+      <div class="feature-detail">Uses TF-IDF vectors averaged across your chosen articles to build a living model of your interests.</div>
+    </div>
+    <div class="feature-cell">
+      <div class="feature-num">02</div>
+      <h3>Negative Feedback</h3>
+      <p>Articles you skip are actively down-weighted. Your silence counts just as much as your clicks.</p>
+      <div class="feature-detail">Skipped articles push the profile vector away from those topics — not just ignored, actively avoided.</div>
+    </div>
+    <div class="feature-cell">
+      <div class="feature-num">03</div>
+      <h3>Preference Chart</h3>
+      <p>A visual history of how your interests evolve across rounds — watch the feed learn to know you.</p>
+      <div class="feature-detail">Stacked bar chart updates after every article you pick, showing category distribution over time.</div>
+    </div>
+  </div>
+
+  <!-- Divider between rows -->
+  <div class="features-divider"></div>
+
+  <!-- Row 2 label -->
+  <div class="features-row-label">
+    <span>Surfacing the best</span>
+    <div class="features-row-rule"></div>
+  </div>
+
+  <div class="features-grid">
+    <div class="feature-cell">
+      <div class="feature-num">04</div>
+      <h3>Semantic Search</h3>
+      <p>Search in plain English — the engine understands intent, not just keyword matches.</p>
+      <div class="feature-detail">Cosine similarity against TF-IDF vectors across the full 51K article corpus.</div>
+    </div>
+    <div class="feature-cell">
+      <div class="feature-num">05</div>
+      <h3>Popularity Signal</h3>
+      <p>Real click data from the MIND dataset surfaces genuinely resonant articles alongside personal picks.</p>
+      <div class="feature-detail">Blends collaborative popularity with your individual profile score for each recommendation.</div>
+    </div>
+    <div class="feature-cell">
+      <div class="feature-num">06</div>
+      <h3>Diversity Mode</h3>
+      <p>One slot every round is reserved for something outside your usual topics — to keep the feed surprising.</p>
+      <div class="feature-detail">Detects your dominant subcategory and injects one article from a different subcategory each round.</div>
+    </div>
+  </div>
+
+</section>
+
+<!-- CTA STRIP -->
+<div class="cta-strip">
+  <div class="cta-strip-text">
+    <h2>Ready to see it in action?</h2>
+    <p>Pick any article from the archive and the engine starts learning immediately.</p>
+  </div>
+  <div class="cta-strip-actions">
+    <a href="/" class="btn-secondary">Browse archive</a>
+    <a href="/auth?tab=register" class="btn-primary">Get started</a>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <p>NewsAI &nbsp;·&nbsp; Built on the MIND dataset &nbsp;·&nbsp; &copy; 2025</p>
+</footer>
+
+</body>
+</html>

@@ -3,35 +3,36 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>NewsAI — Your Feed</title>
+  <title>NewsAI — Your Edition</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg:      #FBFBFD;
-      --bg-alt:  #F5F5F7;
-      --text:    #1D1D1F;
-      --text-2:  #6E6E73;
-      --text-3:  #86868B;
-      --accent:  #0071E3;
-      --accent-h:#0077ED;
-      --accent-bg: rgba(0,113,227,0.08);
-      --border:  rgba(0,0,0,0.1);
-      --card:    #FFFFFF;
-      --nav-bg:  rgba(255,255,255,0.88);
-      --selected:#EBF4FF;
-      --selected-border: #0071E3;
-      --error:   #FF3B30;
-      --success: #34C759;
-      --explore: #FF9F0A;
-      --pill:    980px;
-      --r:       16px;
-      --r-sm:    10px;
-      --ease:    cubic-bezier(0.4,0,0.2,1);
+      --bg:     #F5F5F0;
+      --bg-2:   #ECEAE4;
+      --bg-3:   #E2E0D8;
+      --text:   #111111;
+      --text-2: #484038;
+      --text-3: #8A8078;
+      --red:    #8B1A1A;
+      --teal:   #1A6E60;
+      --rule:   rgba(17,11,9,0.12);
+      --rule-2: rgba(17,11,9,0.22);
+      --faint:  rgba(17,11,9,0.04);
+      /* Legacy aliases for compatibility */
+      --ink:    #F5F5F0;
+      --ink-2:  #ECEAE4;
+      --paper:  #111111;
+      --paper-2:#2A2218;
+      --grey:   #484038;
+      --grey-2: #8A8078;
+      --gold:   #8B1A1A;
     }
 
+    html { scroll-behavior: smooth; }
+
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+      font-family: Georgia, 'Times New Roman', serif;
       background: var(--bg); color: var(--text);
       -webkit-font-smoothing: antialiased; min-height: 100vh;
     }
@@ -39,447 +40,708 @@
     /* ── NAV ─────────────────────────────────────────── */
     nav {
       position: sticky; top: 0; z-index: 200;
-      background: var(--nav-bg);
-      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-      border-bottom: 1px solid var(--border);
-      height: 52px;
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 0 24px;
+      background: var(--bg);
+      border-bottom: 3px double var(--rule-2);
+      padding: 0 32px;
     }
-    .nav-logo { font-size: 17px; font-weight: 600; color: var(--text); text-decoration: none; letter-spacing: -0.3px; }
+    .nav-top {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 0 12px; border-bottom: 1px solid var(--rule);
+    }
+    .nav-logo {
+      font-size: 28px; font-weight: 700; letter-spacing: -1px;
+      color: var(--text); text-decoration: none; line-height: 1;
+    }
+    .nav-edition {
+      font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--grey);
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+    }
+    .nav-edition span { color: var(--paper); font-weight: 600; }
     .nav-user {
       display: flex; align-items: center; gap: 16px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
     }
-    .nav-user-name {
-      font-size: 14px; color: var(--text-2);
-    }
-    .nav-user-name strong { color: var(--text); font-weight: 600; }
+    .nav-name { font-size: 13px; color: var(--grey); }
+    .nav-name strong { color: var(--paper); }
     .btn-logout {
-      padding: 6px 14px; border-radius: var(--pill);
-      font-size: 13px; font-weight: 500;
-      border: 1px solid var(--border); background: transparent;
-      color: var(--text-2); cursor: pointer;
-      transition: all 0.2s var(--ease); font-family: inherit;
+      font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--grey); background: none; border: none; cursor: pointer;
+      font-family: inherit; transition: color 0.2s; padding: 0;
     }
-    .btn-logout:hover { border-color: var(--error); color: var(--error); }
+    .btn-logout:hover { color: var(--red); }
 
-    /* ── PHASE WRAPPER ───────────────────────────────── */
+    /* ── PHASE ───────────────────────────────────────── */
     .phase { display: none; }
     .phase.active { display: block; }
 
     /* ── COLD START ──────────────────────────────────── */
-    .cold-start {
-      max-width: 680px; margin: 0 auto;
-      padding: 64px 24px 40px;
-      text-align: center;
+    .cold-wrap {
+      max-width: 800px; margin: 0 auto;
+      padding: 72px 32px 60px;
     }
-    .cold-start h1 {
-      font-size: 36px; font-weight: 700; letter-spacing: -1px;
-      margin-bottom: 10px;
+    .cold-eyebrow {
+      font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase;
+      color: var(--red); margin-bottom: 20px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
     }
-    .cold-start p { font-size: 17px; color: var(--text-2); margin-bottom: 40px; }
+    .cold-wrap h1 {
+      font-size: 48px; font-weight: 700; letter-spacing: -2px; line-height: 1.0;
+      margin-bottom: 14px; color: var(--paper);
+    }
+    .cold-wrap > p {
+      font-size: 17px; color: var(--grey); margin-bottom: 48px; line-height: 1.7;
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+    }
 
     .start-options {
       display: grid; grid-template-columns: 1fr 1fr;
-      gap: 16px; margin-bottom: 32px;
+      gap: 0; border: 1px solid var(--rule-2);
+      margin-bottom: 32px; background: var(--bg-2);
     }
     .start-option {
-      padding: 28px 24px; border-radius: var(--r);
-      border: 2px solid var(--border); background: var(--card);
-      cursor: pointer; text-align: left;
-      transition: all 0.25s var(--ease);
+      padding: 32px 28px; cursor: pointer;
+      border-right: 1px solid var(--rule-2);
+      transition: background 0.2s;
+      position: relative;
     }
-    .start-option:hover {
-      border-color: var(--accent); background: var(--accent-bg);
-      transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,113,227,0.12);
+    .start-option:last-child { border-right: none; }
+    .start-option:hover { background: var(--bg-2); }
+    .start-option.selected { background: var(--bg-2); }
+    .start-option.selected::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: var(--red);
     }
-    .start-option.selected {
-      border-color: var(--accent); background: var(--accent-bg);
+    .start-option-label {
+      font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--red); margin-bottom: 12px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
     }
-    .start-option-icon { font-size: 28px; margin-bottom: 12px; }
-    .start-option h3 { font-size: 16px; font-weight: 600; margin-bottom: 5px; }
-    .start-option p  { font-size: 14px; color: var(--text-2); line-height: 1.5; margin: 0; }
+    .start-option h3 {
+      font-size: 20px; font-weight: 700; letter-spacing: -0.4px;
+      margin-bottom: 8px; color: var(--paper);
+    }
+    .start-option p {
+      font-size: 14px; color: var(--grey); line-height: 1.6; margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+    }
 
-    /* Search input */
-    .search-box {
-      display: none; margin-bottom: 24px; text-align: left;
-    }
+    /* Search */
+    .search-box { display: none; margin-bottom: 24px; }
     .search-box.visible { display: block; }
-    .search-row {
-      display: flex; gap: 10px;
-    }
+    .search-row { display: flex; gap: 0; border: 1px solid var(--rule-2); }
     .search-input {
       flex: 1; padding: 14px 18px;
-      border: 1.5px solid var(--border); border-radius: var(--r-sm);
-      font-size: 16px; font-family: inherit; color: var(--text);
-      background: var(--card); outline: none;
-      transition: border-color 0.2s;
+      border: none; background: var(--bg-2);
+      font-size: 16px; font-family: Georgia, 'Times New Roman', serif;
+      color: var(--paper); outline: none;
     }
-    .search-input:focus { border-color: var(--accent); }
+    .search-input::placeholder { color: var(--grey-2); }
     .btn-search {
-      padding: 14px 22px; border-radius: var(--r-sm);
-      background: var(--accent); color: #fff;
-      font-size: 15px; font-weight: 500; font-family: inherit;
-      border: none; cursor: pointer; transition: background 0.2s;
+      padding: 14px 24px; background: var(--red); color: #fff;
+      font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase;
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+      font-weight: 700; border: none; cursor: pointer; transition: background 0.2s;
       white-space: nowrap;
     }
-    .btn-search:hover { background: var(--accent-h); }
+    .btn-search:hover { background: #a82214; }
 
-    /* Browse dropdowns */
-    .browse-box {
-      display: none; margin-bottom: 24px;
-    }
+    /* Browse */
+    .browse-box { display: none; margin-bottom: 24px; }
     .browse-box.visible { display: block; }
-    .select-row {
-      display: flex; gap: 12px; flex-wrap: wrap;
-    }
+    .select-row { display: flex; gap: 12px; }
     .browse-select {
-      flex: 1; min-width: 180px; padding: 13px 16px;
-      border: 1.5px solid var(--border); border-radius: var(--r-sm);
-      font-size: 15px; font-family: inherit; color: var(--text);
-      background: var(--card); outline: none; cursor: pointer;
-      transition: border-color 0.2s;
+      flex: 1; padding: 13px 16px;
+      border: 1px solid var(--rule-2); background: var(--bg-2);
+      font-size: 15px; font-family: Georgia, serif; color: var(--text);
+      outline: none; cursor: pointer;
     }
-    .browse-select:focus { border-color: var(--accent); }
+    .browse-select option { background: var(--ink-2); }
 
-    /* Seed cards (search results / browse preview) */
-    .seed-cards { display: none; text-align: left; margin-bottom: 24px; }
+    /* Seed list */
+    .seed-cards { display: none; margin-bottom: 24px; }
     .seed-cards.visible { display: block; }
-    .seed-cards-label {
-      font-size: 13px; font-weight: 600; color: var(--text-2);
-      letter-spacing: 0.05em; text-transform: uppercase;
-      margin-bottom: 12px;
+    .seed-label {
+      font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--grey); margin-bottom: 12px; padding-bottom: 8px;
+      border-bottom: 1px solid var(--rule);
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
     }
     .seed-card {
-      background: var(--card); border: 1px solid var(--border);
-      border-radius: var(--r-sm); padding: 14px 16px;
-      margin-bottom: 8px; display: flex; align-items: flex-start; gap: 12px;
+      display: flex; gap: 14px; align-items: flex-start;
+      padding: 12px 0; border-bottom: 1px solid var(--rule);
     }
+    .seed-card:last-child { border-bottom: none; }
     .seed-num {
-      font-size: 13px; font-weight: 700; color: var(--accent);
-      min-width: 20px; margin-top: 1px;
+      font-size: 11px; font-weight: 700; color: var(--red); min-width: 18px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
     }
-    .seed-info {}
-    .seed-title { font-size: 14px; font-weight: 600; margin-bottom: 3px; }
-    .seed-cat   { font-size: 12px; color: var(--text-2); }
+    .seed-title { font-size: 14px; font-weight: 700; line-height: 1.3; }
+    .seed-cat {
+      font-size: 11px; color: var(--grey); margin-top: 3px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+    }
 
     /* Start button */
     .btn-start {
-      display: none; width: 100%; padding: 15px;
-      background: var(--accent); color: #fff;
-      font-size: 17px; font-weight: 600; font-family: inherit;
-      border: none; border-radius: var(--r-sm); cursor: pointer;
-      transition: all 0.25s var(--ease);
-      align-items: center; justify-content: center; gap: 8px;
+      display: none; width: 100%; padding: 16px;
+      background: var(--red); color: #fff;
+      font-size: 13px; letter-spacing: 0.1em; text-transform: uppercase;
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+      font-weight: 700; border: none; cursor: pointer; transition: background 0.2s;
     }
-    .btn-start.visible { display: flex; }
-    .btn-start:hover {
-      background: var(--accent-h); transform: translateY(-1px);
-      box-shadow: 0 6px 20px rgba(0,113,227,0.3);
+    .btn-start.visible { display: block; }
+    .btn-start:hover { background: #a82214; }
+
+    /* ── EDITION HEADER ──────────────────────────────── */
+    .edition-bar {
+      padding: 10px 32px;
+      border-bottom: 1px solid var(--rule);
+      display: flex; align-items: center; justify-content: space-between;
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+    }
+    .edition-round {
+      font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--red); font-weight: 700;
+    }
+    .edition-title {
+      font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--grey);
+    }
+    .btn-end {
+      font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--grey); background: none; border: none; cursor: pointer;
+      font-family: inherit; transition: color 0.2s; padding: 0;
+    }
+    .btn-end:hover { color: var(--red); }
+
+    /* ── BROADSHEET LAYOUT ───────────────────────────── */
+    .broadsheet {
+      padding: 0 32px 48px;
+      max-width: 1400px;
     }
 
-    /* ── RECOMMENDATIONS PHASE ───────────────────────── */
-    .recs-layout {
-      display: grid; grid-template-columns: 1fr 300px;
-      gap: 24px; max-width: 1120px; margin: 0 auto;
-      padding: 32px 24px;
-      align-items: start;
-    }
-
-    /* Header */
-    .recs-header {
-      display: flex; align-items: baseline; gap: 14px;
-      margin-bottom: 24px; flex-wrap: wrap;
-    }
-    .recs-header h2 {
-      font-size: 24px; font-weight: 700; letter-spacing: -0.5px;
-    }
-    .round-badge {
-      font-size: 13px; font-weight: 600; color: var(--text-2);
-      background: var(--bg-alt); border: 1px solid var(--border);
-      border-radius: var(--pill); padding: 3px 12px;
-    }
-
-    /* Loading state */
-    .loading-cards {
-      display: flex; flex-direction: column; gap: 16px;
-    }
-    .skeleton {
-      background: var(--card); border: 1px solid var(--border);
-      border-radius: var(--r); padding: 24px;
+    /* Skeleton */
+    .skeleton-sheet {
+      padding: 32px 0;
       animation: pulse 1.6s ease-in-out infinite;
     }
-    .skeleton-line {
-      height: 14px; border-radius: 7px;
-      background: var(--bg-alt); margin-bottom: 10px;
+    .skel-line {
+      height: 14px; border-radius: 2px;
+      background: rgba(242,236,216,0.06); margin-bottom: 10px;
     }
-    .skeleton-line.short { width: 40%; }
-    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+    .skel-line.short { width: 30%; }
+    .skel-line.med   { width: 60%; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
 
-    /* Article cards */
-    .article-cards { display: flex; flex-direction: column; gap: 14px; }
-    .article-card {
-      background: var(--card); border-radius: var(--r);
-      border: 2px solid transparent;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-      padding: 22px 24px; cursor: pointer;
-      transition: all 0.22s var(--ease);
+    /* The main newspaper grid — 2 columns, lead + supporting */
+    .paper-grid {
+      display: grid;
+      grid-template-columns: 3fr 2fr;
+      gap: 0;
+      align-items: start;   /* prevents lead story stretching to match col height */
+      border-bottom: 1px solid var(--rule-2);
+    }
+
+    /* LEAD STORY — left column */
+    .lead-story {
+      padding: 28px 36px 28px 0;
+      cursor: pointer;
+      transition: background 0.2s;
       position: relative;
+      border-right: 1px solid var(--rule-2);
+      /* Don't stretch — let content dictate height */
     }
-    .article-card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 28px rgba(0,0,0,0.1);
-      border-color: rgba(0,113,227,0.3);
+    .lead-story:hover { background: var(--bg-2); }
+    .lead-story.selected { background: var(--bg-2); }
+    .lead-story.selected::before {
+      content: '';
+      position: absolute; top: 0; left: 0; bottom: 0; width: 3px;
+      background: var(--red);
     }
-    .article-card.selected {
-      border-color: var(--selected-border);
-      background: var(--selected);
-      box-shadow: 0 4px 20px rgba(0,113,227,0.15);
+    .story-category {
+      font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--red); margin-bottom: 14px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+      display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
     }
-    .article-card.selected::after {
-      content: '✓';
-      position: absolute; top: 18px; right: 20px;
-      width: 26px; height: 26px; border-radius: 50%;
-      background: var(--accent); color: #fff;
-      font-size: 14px; font-weight: 700;
-      display: flex; align-items: center; justify-content: center;
+    .story-category-sub {
+      color: var(--grey);
     }
-
-    .card-top {
-      display: flex; align-items: center; gap: 10px;
-      margin-bottom: 10px; flex-wrap: wrap;
+    .explore-flag {
+      font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--gold); padding: 2px 8px;
+      border: 1px solid rgba(200,162,40,0.3);
     }
-    .cat-badge {
-      font-size: 11px; font-weight: 600; letter-spacing: 0.04em;
-      text-transform: uppercase; color: var(--accent);
-      background: var(--accent-bg); padding: 3px 10px;
-      border-radius: var(--pill);
+    .lead-headline {
+      font-size: clamp(28px, 3vw, 44px);
+      font-weight: 700; letter-spacing: -1.5px; line-height: 1.05;
+      margin-bottom: 18px; color: var(--paper);
     }
-    .subcat-badge {
-      font-size: 11px; color: var(--text-3);
-    }
-    .explore-tag {
-      font-size: 11px; font-weight: 600;
-      color: var(--explore); background: rgba(255,159,10,0.1);
-      border-radius: var(--pill); padding: 3px 10px;
-      letter-spacing: 0.03em;
-    }
-    .score-pill {
-      margin-left: auto; font-size: 11px; color: var(--text-3);
-    }
-
-    .card-title {
-      font-size: 17px; font-weight: 600; letter-spacing: -0.3px;
-      line-height: 1.35; margin-bottom: 8px; padding-right: 32px;
-      color: var(--text);
-    }
-    .card-abstract {
-      font-size: 14px; color: var(--text-2); line-height: 1.6;
-      display: -webkit-box; -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical; overflow: hidden;
-      margin-bottom: 12px;
-    }
-    .card-explanation {
-      display: none; padding-top: 12px;
-      border-top: 1px solid var(--border);
-    }
-    .card-explanation.visible { display: block; }
-    .explanation-because {
-      font-size: 13px; color: var(--text-2);
-      display: flex; gap: 6px; align-items: flex-start; margin-bottom: 6px;
-    }
-    .explanation-because span:first-child { color: var(--accent); font-size: 14px; }
-    .explanation-keywords {
-      display: flex; gap: 6px; flex-wrap: wrap;
-    }
-    .keyword-pill {
-      font-size: 12px; background: var(--bg-alt);
-      border: 1px solid var(--border); border-radius: var(--pill);
-      padding: 2px 10px; color: var(--text-2);
-    }
-
-    /* Action bar */
-    .action-bar {
-      display: flex; gap: 12px; margin-top: 20px; flex-wrap: wrap;
-    }
-    .btn-next {
-      padding: 14px 28px; border-radius: var(--r-sm);
-      background: var(--accent); color: #fff;
-      font-size: 16px; font-weight: 600; font-family: inherit;
-      border: none; cursor: pointer; transition: all 0.2s var(--ease);
-      display: flex; align-items: center; gap: 8px;
-    }
-    .btn-next:hover:not(:disabled) {
-      background: var(--accent-h); transform: translateY(-1px);
-      box-shadow: 0 6px 20px rgba(0,113,227,0.3);
-    }
-    .btn-next:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
-    .btn-done {
-      padding: 14px 24px; border-radius: var(--r-sm);
-      background: transparent; color: var(--text-2);
-      font-size: 16px; font-weight: 500; font-family: inherit;
-      border: 1.5px solid var(--border); cursor: pointer;
-      transition: all 0.2s var(--ease);
-    }
-    .btn-done:hover { border-color: var(--text-2); color: var(--text); }
-
-    /* ── SIDEBAR ─────────────────────────────────────── */
-    .sidebar {
-      position: sticky; top: 68px;
-      background: var(--card); border: 1px solid var(--border);
-      border-radius: var(--r); padding: 22px;
-    }
-    .sidebar-title {
-      font-size: 13px; font-weight: 600; letter-spacing: 0.05em;
-      text-transform: uppercase; color: var(--text-2);
+    .lead-abstract {
+      font-size: 16px; color: var(--grey); line-height: 1.75;
       margin-bottom: 18px;
     }
-    .stat-row {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 10px 0; border-bottom: 1px solid var(--border);
+    .story-explanation {
+      padding: 14px 0; margin-top: 6px;
+      border-top: 1px solid var(--rule);
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
     }
-    .stat-row:last-of-type { border-bottom: none; }
-    .stat-label { font-size: 14px; color: var(--text-2); }
-    .stat-val   { font-size: 14px; font-weight: 600; color: var(--text); }
-
-    .interests-title {
-      font-size: 13px; font-weight: 600; color: var(--text-2);
-      margin: 20px 0 12px; letter-spacing: 0.04em; text-transform: uppercase;
+    .story-because {
+      font-size: 13px; color: var(--grey); margin-bottom: 8px;
+      display: flex; align-items: flex-start; gap: 6px; line-height: 1.5;
     }
-    .interest-row { margin-bottom: 10px; }
-    .interest-name { font-size: 13px; color: var(--text); margin-bottom: 4px; display: flex; justify-content: space-between; }
-    .interest-bar { height: 4px; border-radius: 2px; background: var(--bg-alt); overflow: hidden; }
-    .interest-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.5s var(--ease); }
-
-    .btn-wrap-up {
-      width: 100%; margin-top: 20px; padding: 12px;
-      border-radius: var(--r-sm); border: 1.5px solid var(--border);
-      background: transparent; color: var(--text-2);
-      font-size: 14px; font-weight: 500; font-family: inherit;
-      cursor: pointer; transition: all 0.2s var(--ease);
+    .story-because-arrow { color: var(--gold); flex-shrink: 0; }
+    .story-keywords {
+      display: flex; gap: 6px; flex-wrap: wrap;
     }
-    .btn-wrap-up:hover { border-color: var(--error); color: var(--error); }
+    .kw {
+      font-size: 11px; letter-spacing: 0.06em;
+      color: var(--grey); padding: 2px 10px;
+      border: 1px solid var(--rule-2);
+    }
+    .score-tag {
+      font-size: 10px; letter-spacing: 0.08em;
+      color: var(--grey-2); margin-left: auto;
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+      align-self: flex-start; padding-top: 2px;
+    }
 
-    /* ── SUMMARY PHASE ───────────────────────────────── */
+    /* ── PREFERENCE CHART ────────────────────────────── */
+    .pref-chart-wrap {
+      padding: 24px 0;
+      border-bottom: 1px solid var(--rule);
+      display: none;
+    }
+    .pref-chart-wrap.visible { display: block; }
+    .pref-chart-label {
+      font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--grey); margin-bottom: 16px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+    }
+    .pref-chart { display: flex; flex-direction: column; gap: 8px; }
+    .pref-row { display: flex; align-items: center; gap: 10px; }
+    .pref-row-label {
+      font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--grey-2); min-width: 52px; text-align: right;
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+    }
+    .pref-bar-track {
+      flex: 1; height: 20px; position: relative; display: flex;
+      overflow: hidden; background: var(--bg-3);
+    }
+    .pref-segment {
+      height: 100%; transition: width 0.6s cubic-bezier(0.4,0,0.2,1);
+      position: relative;
+    }
+    .pref-legend {
+      display: flex; flex-wrap: wrap; gap: 12px; margin-top: 12px;
+    }
+    .pref-legend-item {
+      display: flex; align-items: center; gap: 5px;
+      font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase;
+      color: var(--grey);
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+    }
+    .pref-legend-dot { width: 8px; height: 8px; flex-shrink: 0; }
+
+    /* Story actions — shown when selected */
+    .story-actions {
+      display: none; margin-top: 20px;
+      gap: 12px; align-items: center;
+    }
+    .story-actions.visible { display: flex; }
+    .btn-view-article {
+      padding: 11px 24px; background: var(--text); color: var(--bg);
+      font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase;
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+      font-weight: 700; border: none; cursor: pointer; transition: background 0.2s;
+      text-decoration: none; display: inline-block;
+    }
+    .btn-view-article:hover { background: var(--red); }
+    .btn-more {
+      padding: 10px 24px;
+      font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase;
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+      font-weight: 700; cursor: pointer; transition: all 0.2s;
+      background: transparent; color: var(--text); border: 1px solid var(--rule-2);
+    }
+    .btn-more:hover { border-color: var(--text); }
+
+    /* SUPPORTING STORIES — right column */
+    .supporting-col {
+      padding: 0 0 0 32px;
+      display: flex; flex-direction: column;
+    }
+    .supporting-story {
+      padding: 24px 0;
+      border-bottom: 1px solid var(--rule);
+      cursor: pointer; transition: background 0.2s;
+      position: relative; padding-left: 0; padding-right: 0;
+    }
+    .supporting-story:last-child { border-bottom: none; }
+    .supporting-story:hover { background: var(--bg-2); }
+    .supporting-story.selected { background: var(--bg-2); }
+    .supporting-story.selected::before {
+      content: '';
+      position: absolute; top: 0; left: -28px; right: -28px; height: 2px;
+      background: var(--red);
+    }
+    .supporting-headline {
+      font-size: 18px; font-weight: 700; letter-spacing: -0.4px;
+      line-height: 1.2; margin-bottom: 8px; color: var(--paper);
+    }
+    .supporting-abstract {
+      font-size: 13px; color: var(--grey); line-height: 1.65;
+      display: -webkit-box; -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 6px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+    }
+    .supporting-why {
+      font-size: 11px; color: var(--grey-2); display: flex; gap: 5px; align-items: center;
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+      font-style: italic;
+    }
+    /* supporting actions */
+    .supporting-actions {
+      display: none; margin-top: 14px; gap: 10px;
+    }
+    .supporting-actions.visible { display: flex; }
+    .btn-sup-view {
+      padding: 9px 18px; background: var(--text); color: var(--bg);
+      font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+      font-weight: 700; border: none; cursor: pointer; text-decoration: none; display: inline-block;
+    }
+    .btn-sup-more {
+      padding: 8px 18px;
+      font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+      font-weight: 700; cursor: pointer;
+      background: transparent; color: var(--text); border: 1px solid var(--rule-2);
+    }
+    .btn-sup-more:hover { border-color: var(--text); }
+
+    /* EXPLORE STRIP — full width below grid */
+    .explore-strip {
+      display: flex; align-items: center; gap: 24px;
+      padding: 20px 0;
+      border-bottom: 2px solid var(--rule-2);
+      cursor: pointer; transition: background 0.2s;
+      position: relative;
+    }
+    .explore-strip:hover { background: var(--bg-2); }
+    .explore-strip.selected { background: var(--bg-2); }
+    .explore-strip.selected::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: var(--gold);
+    }
+    .explore-flag-big {
+      font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--gold); white-space: nowrap;
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+      font-weight: 700; flex-shrink: 0; width: 80px;
+    }
+    .explore-divider { width: 1px; height: 36px; background: var(--rule-2); flex-shrink: 0; }
+    .explore-content { flex: 1; }
+    .explore-headline {
+      font-size: 20px; font-weight: 700; letter-spacing: -0.4px;
+      line-height: 1.2; color: var(--paper);
+    }
+    .explore-sub {
+      font-size: 12px; color: var(--grey); margin-top: 4px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+    }
+    .explore-actions {
+      display: none; gap: 10px; flex-shrink: 0;
+    }
+    .explore-actions.visible { display: flex; }
+
+    /* PROFILE STRIP */
+    .profile-strip {
+      display: flex; align-items: center; gap: 32px;
+      padding: 14px 0; border-bottom: 1px solid var(--rule);
+      overflow-x: auto;
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+    }
+    .profile-stat {
+      display: flex; align-items: center; gap: 10px; flex-shrink: 0;
+    }
+    .profile-stat-label {
+      font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--grey);
+    }
+    .profile-stat-val {
+      font-size: 13px; font-weight: 700; color: var(--paper);
+    }
+    .profile-divider { width: 1px; height: 18px; background: var(--rule); }
+    .interests-row {
+      display: flex; gap: 16px; align-items: center; flex-shrink: 0;
+    }
+    .interest-chip {
+      display: flex; align-items: center; gap: 6px;
+    }
+    .interest-chip-name {
+      font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--grey);
+    }
+    .interest-chip-bar {
+      width: 40px; height: 2px; background: var(--rule); overflow: hidden;
+    }
+    .interest-chip-fill { height: 100%; background: var(--red); }
+
+    /* ── ARTICLE DETAIL OVERLAY ──────────────────────── */
+    .overlay {
+      display: none; position: fixed; inset: 0; z-index: 500;
+      background: rgba(26,18,16,0.7);
+      backdrop-filter: blur(4px);
+      align-items: center; justify-content: center;
+      padding: 40px 24px;
+    }
+    .overlay.show { display: flex; }
+    .overlay-card {
+      background: var(--bg); border: 1px solid var(--rule-2);
+      max-width: 720px; width: 100%;
+      max-height: 90vh; overflow-y: auto;
+      padding: 48px;
+      position: relative;
+    }
+    .overlay-close {
+      position: absolute; top: 20px; right: 24px;
+      font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--grey); background: none; border: none; cursor: pointer;
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+      transition: color 0.2s;
+    }
+    .overlay-close:hover { color: var(--paper); }
+    .overlay-category {
+      font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--red); margin-bottom: 18px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+    }
+    .overlay-headline {
+      font-size: clamp(24px, 3vw, 38px);
+      font-weight: 700; letter-spacing: -1.5px; line-height: 1.1;
+      color: var(--paper); margin-bottom: 24px;
+    }
+    .overlay-rule { height: 1px; background: var(--rule-2); margin-bottom: 24px; }
+    .overlay-abstract {
+      font-size: 17px; color: var(--grey); line-height: 1.8; margin-bottom: 28px;
+    }
+    .overlay-explanation {
+      padding: 20px; background: var(--bg-2); border-left: 2px solid var(--gold);
+      margin-bottom: 28px;
+    }
+    .overlay-expl-label {
+      font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--gold); margin-bottom: 10px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+    }
+    .overlay-because {
+      font-size: 14px; color: var(--grey); line-height: 1.6; margin-bottom: 10px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+    }
+    .overlay-kws { display: flex; gap: 6px; flex-wrap: wrap; }
+    .overlay-kw {
+      font-size: 11px; letter-spacing: 0.06em; color: var(--grey);
+      padding: 2px 10px; border: 1px solid var(--rule-2);
+    }
+    .overlay-actions {
+      display: flex; gap: 12px; align-items: center;
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+    }
+    .overlay-btn-more {
+      padding: 13px 28px; background: var(--red); color: #fff;
+      font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase;
+      font-weight: 700; border: none; cursor: pointer; transition: background 0.2s;
+    }
+    .overlay-btn-more:hover { background: #a82214; }
+    .overlay-note {
+      font-size: 12px; color: var(--grey-2); font-style: italic; line-height: 1.5;
+    }
+
+    /* ── SUMMARY ─────────────────────────────────────── */
     .summary-wrap {
-      max-width: 640px; margin: 0 auto; padding: 64px 24px;
-      text-align: center;
+      max-width: 680px; margin: 0 auto; padding: 72px 32px;
     }
-    .summary-icon { font-size: 56px; margin-bottom: 20px; }
-    .summary-wrap h1 { font-size: 36px; font-weight: 700; letter-spacing: -1px; margin-bottom: 10px; }
-    .summary-wrap p  { font-size: 17px; color: var(--text-2); margin-bottom: 36px; }
+    .summary-eyebrow {
+      font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase;
+      color: var(--red); margin-bottom: 20px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+    }
+    .summary-wrap h1 {
+      font-size: 52px; font-weight: 700; letter-spacing: -2.5px;
+      line-height: 1.0; color: var(--paper); margin-bottom: 32px;
+    }
+    .summary-wrap h1 em { font-style: italic; color: var(--gold); }
     .summary-stats {
-      display: grid; grid-template-columns: repeat(3, 1fr);
-      gap: 16px; margin-bottom: 36px;
+      display: flex; gap: 0; border: 1px solid var(--rule-2);
+      margin-bottom: 48px;
     }
     .summary-stat {
-      background: var(--card); border: 1px solid var(--border);
-      border-radius: var(--r); padding: 20px 16px; text-align: center;
+      flex: 1; padding: 28px 24px; text-align: center;
+      border-right: 1px solid var(--rule-2);
     }
-    .summary-stat strong { display: block; font-size: 28px; font-weight: 700; letter-spacing: -1px; color: var(--text); }
-    .summary-stat span   { font-size: 13px; color: var(--text-2); }
-    .summary-cats { text-align: left; margin-bottom: 36px; }
-    .summary-cats h3 { font-size: 16px; font-weight: 600; margin-bottom: 14px; }
-    .summary-cat-row { margin-bottom: 12px; }
-    .summary-cat-name { font-size: 14px; color: var(--text); margin-bottom: 5px; display: flex; justify-content: space-between; }
-    .summary-cat-bar  { height: 5px; border-radius: 3px; background: var(--bg-alt); overflow: hidden; }
-    .summary-cat-fill { height: 100%; background: var(--accent); border-radius: 3px; }
-    .btn-new-session {
-      padding: 15px 36px; border-radius: var(--pill);
-      background: var(--accent); color: #fff;
-      font-size: 17px; font-weight: 600; font-family: inherit;
-      border: none; cursor: pointer; transition: all 0.25s var(--ease);
+    .summary-stat:last-child { border-right: none; }
+    .summary-stat strong {
+      display: block; font-size: 48px; font-weight: 700;
+      letter-spacing: -3px; color: var(--paper); line-height: 1;
+      margin-bottom: 6px;
     }
-    .btn-new-session:hover { background: var(--accent-h); transform: translateY(-1px); box-shadow: 0 8px 24px rgba(0,113,227,0.3); }
+    .summary-stat span {
+      font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--grey);
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+    }
+    .summary-cats {
+      margin-bottom: 48px; border-top: 1px solid var(--rule-2);
+      padding-top: 28px;
+    }
+    .summary-cats-label {
+      font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--grey); margin-bottom: 20px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+    }
+    .summary-cat-row { margin-bottom: 14px; display: flex; align-items: center; gap: 16px; }
+    .summary-cat-name { font-size: 15px; font-weight: 700; color: var(--paper); min-width: 120px; }
+    .summary-cat-bar { flex: 1; height: 2px; background: var(--rule); overflow: hidden; }
+    .summary-cat-fill { height: 100%; background: var(--red); }
+    .summary-cat-count {
+      font-size: 12px; color: var(--grey); min-width: 60px; text-align: right;
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+    }
+    .btn-new {
+      padding: 14px 36px; background: var(--red); color: #fff;
+      font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase;
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+      font-weight: 700; border: none; cursor: pointer; transition: background 0.2s;
+    }
+    .btn-new:hover { background: #a82214; }
 
     /* ── TOAST ───────────────────────────────────────── */
     .toast {
       position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(60px);
-      background: var(--text); color: #fff;
-      padding: 12px 20px; border-radius: var(--pill);
-      font-size: 14px; font-weight: 500;
-      opacity: 0; transition: all 0.3s var(--ease); z-index: 999;
+      background: var(--text); color: var(--bg);
+      border: 1px solid var(--rule-2);
+      padding: 12px 24px;
+      font-size: 13px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+      opacity: 0; transition: all 0.3s; z-index: 999;
       pointer-events: none;
     }
     .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
     /* ── LOADING OVERLAY ─────────────────────────────── */
     .loading-overlay {
-      position: fixed; inset: 0; background: rgba(251,251,253,0.7);
-      backdrop-filter: blur(4px); z-index: 500;
+      position: fixed; inset: 0; background: rgba(245,240,230,0.75);
+      backdrop-filter: blur(4px); z-index: 400;
       display: none; align-items: center; justify-content: center;
       flex-direction: column; gap: 16px;
     }
     .loading-overlay.show { display: flex; }
     .loader-ring {
-      width: 44px; height: 44px;
-      border: 3.5px solid var(--border);
-      border-top-color: var(--accent); border-radius: 50%;
+      width: 36px; height: 36px;
+      border: 2px solid var(--rule-2);
+      border-top-color: var(--red); border-radius: 50%;
       animation: spin 0.8s linear infinite;
     }
-    .loader-text { font-size: 15px; color: var(--text-2); }
+    .loader-text {
+      font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--grey);
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+    }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    @media (max-width: 768px) {
-      .recs-layout { grid-template-columns: 1fr; }
-      .sidebar { position: static; }
+    @media (max-width: 900px) {
+      nav { padding: 0 20px; }
+      .broadsheet, .cold-wrap { padding-left: 20px; padding-right: 20px; }
+      .paper-grid { grid-template-columns: 1fr; }
+      .lead-story { border-right: none; padding-right: 0; padding-bottom: 24px; border-bottom: 1px solid var(--rule-2); }
+      .supporting-col { padding-left: 0; padding-top: 24px; }
+      .supporting-story.selected::before { left: 0; right: 0; }
       .start-options { grid-template-columns: 1fr; }
-      .summary-stats { grid-template-columns: 1fr 1fr; }
+      .start-option { border-right: none; border-bottom: 1px solid var(--rule-2); }
+      .summary-stats { flex-direction: column; }
+      .summary-stat { border-right: none; border-bottom: 1px solid var(--rule-2); }
+      .overlay-card { padding: 32px 24px; }
+      .edition-bar { padding: 10px 20px; }
     }
   </style>
 </head>
 <body>
 
-<!-- NAV -->
-<nav>
-  <a href="/" class="nav-logo">NewsAI</a>
-  <div class="nav-user">
-    <span class="nav-user-name">Hi, <strong>{{ user_name }}</strong></span>
-    <button class="btn-logout" onclick="handleLogout()">Sign out</button>
-  </div>
-</nav>
-
-<!-- LOADING OVERLAY -->
+<!-- LOADING -->
 <div class="loading-overlay" id="loading-overlay">
   <div class="loader-ring"></div>
-  <div class="loader-text" id="loader-text">Loading recommendations...</div>
+  <div class="loader-text" id="loader-text">Loading…</div>
 </div>
 
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
 
-<!-- ══════════════════════════════════════════════ -->
-<!-- PHASE 1: COLD START                           -->
-<!-- ══════════════════════════════════════════════ -->
+<!-- ARTICLE DETAIL OVERLAY -->
+<div class="overlay" id="article-overlay" onclick="closeOverlay(event)">
+  <div class="overlay-card" id="overlay-card">
+    <button class="overlay-close" onclick="closeOverlay(null)">Close ✕</button>
+    <div class="overlay-category" id="ov-category"></div>
+    <div class="overlay-headline" id="ov-headline"></div>
+    <div class="overlay-rule"></div>
+    <div class="overlay-abstract" id="ov-abstract"></div>
+    <div class="overlay-explanation" id="ov-explanation" style="display:none">
+      <div class="overlay-expl-label">Why this was recommended</div>
+      <div class="overlay-because" id="ov-because"></div>
+      <div class="overlay-kws" id="ov-kws"></div>
+    </div>
+    <div class="overlay-actions">
+      <button class="overlay-btn-more" id="ov-btn-more">More like this →</button>
+      <p class="overlay-note">Story from the MIND news dataset · original articles may no longer be live</p>
+    </div>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-top">
+    <a href="/" class="nav-logo">NewsAI</a>
+    <span class="nav-edition">Personal edition for <span>{{ user_name }}</span></span>
+    <div class="nav-user">
+      <button class="btn-logout" onclick="handleLogout()">Sign out</button>
+    </div>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- PHASE 1: COLD START                            -->
+<!-- ═══════════════════════════════════════════════ -->
 <div class="phase active" id="phase-cold">
-  <div class="cold-start">
-    <h1>Where would you like to start?</h1>
-    <p>Choose how to seed your personalised feed.</p>
+  <div class="cold-wrap">
+    <div class="cold-eyebrow">New edition</div>
+    <h1>What would you like to read?</h1>
+    <p>Choose how to seed your personal feed. The engine will take it from there.</p>
 
     <div class="start-options">
       <div class="start-option" id="opt-search" onclick="selectMode('search')">
-        <div class="start-option-icon">🔍</div>
+        <div class="start-option-label">Search</div>
         <h3>Search a topic</h3>
-        <p>Type anything in plain English — "NBA", "climate change", "stock market".</p>
+        <p>Type anything — "NBA", "climate change", "federal reserve". The engine understands intent.</p>
       </div>
       <div class="start-option" id="opt-browse" onclick="selectMode('browse')">
-        <div class="start-option-icon">📂</div>
+        <div class="start-option-label">Browse</div>
         <h3>Browse by category</h3>
-        <p>Pick a topic category and subcategory to explore curated articles.</p>
+        <p>Pick a topic category and subcategory to explore a curated selection of articles.</p>
       </div>
     </div>
 
-    <!-- SEARCH UI -->
     <div class="search-box" id="search-box">
       <div class="search-row">
         <input class="search-input" id="search-input" type="text"
                placeholder="e.g. NBA playoffs, federal reserve, climate change…"
                onkeydown="if(event.key==='Enter') runSearch()" />
-        <button class="btn-search" onclick="runSearch()">Search</button>
+        <button class="btn-search" onclick="runSearch()">Search →</button>
       </div>
     </div>
 
-    <!-- BROWSE UI -->
     <div class="browse-box" id="browse-box">
       <div class="select-row">
         <select class="browse-select" id="cat-select" onchange="onCatChange()">
@@ -491,96 +753,94 @@
       </div>
     </div>
 
-    <!-- SEED PREVIEW -->
     <div class="seed-cards" id="seed-cards">
-      <div class="seed-cards-label" id="seed-label">Starting articles</div>
+      <div class="seed-label" id="seed-label">Starting articles</div>
       <div id="seed-list"></div>
     </div>
 
-    <!-- START BUTTON -->
     <button class="btn-start" id="btn-start" onclick="startSession()">
-      Start reading →
+      Start your edition →
     </button>
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════════ -->
-<!-- PHASE 2: RECOMMENDATIONS                      -->
-<!-- ══════════════════════════════════════════════ -->
+<!-- ═══════════════════════════════════════════════ -->
+<!-- PHASE 2: RECOMMENDATIONS                       -->
+<!-- ═══════════════════════════════════════════════ -->
 <div class="phase" id="phase-recs">
-  <div class="recs-layout">
+  <!-- Edition bar -->
+  <div class="edition-bar">
+    <span class="edition-round" id="edition-round">Edition 1</span>
+    <span class="edition-title" id="edition-title">Your picks</span>
+    <button class="btn-end" onclick="endSession()">End session</button>
+  </div>
 
-    <!-- LEFT: ARTICLES -->
-    <div>
-      <div class="recs-header">
-        <h2 id="recs-title">Your picks</h2>
-        <span class="round-badge" id="round-badge">Round 1</span>
+  <!-- Profile strip -->
+  <div class="broadsheet">
+    <div class="profile-strip" id="profile-strip" style="display:none">
+      <div class="profile-stat">
+        <span class="profile-stat-label">Read</span>
+        <span class="profile-stat-val" id="sb-count">—</span>
       </div>
-
-      <!-- Skeleton loading -->
-      <div class="loading-cards" id="skeletons">
-        <div class="skeleton">
-          <div class="skeleton-line short"></div>
-          <div class="skeleton-line"></div>
-          <div class="skeleton-line"></div>
-        </div>
-        <div class="skeleton">
-          <div class="skeleton-line short"></div>
-          <div class="skeleton-line"></div>
-          <div class="skeleton-line"></div>
-        </div>
-        <div class="skeleton">
-          <div class="skeleton-line short"></div>
-          <div class="skeleton-line"></div>
-          <div class="skeleton-line"></div>
-        </div>
+      <div class="profile-divider"></div>
+      <div class="profile-stat">
+        <span class="profile-stat-label">Skipped</span>
+        <span class="profile-stat-val" id="sb-skips">—</span>
       </div>
-
-      <div class="article-cards" id="article-cards" style="display:none"></div>
-
-      <div class="action-bar" id="action-bar" style="display:none">
-        <button class="btn-next" id="btn-next" onclick="handleNext()" disabled>
-          Next round →
-        </button>
-        <button class="btn-done" onclick="endSession()">I'm done reading</button>
+      <div class="profile-divider"></div>
+      <div class="profile-stat">
+        <span class="profile-stat-label">Top topic</span>
+        <span class="profile-stat-val" id="sb-dominant">—</span>
       </div>
+      <div class="profile-divider"></div>
+      <div class="interests-row" id="sb-interests"></div>
     </div>
 
-    <!-- RIGHT: SIDEBAR -->
-    <aside class="sidebar" id="sidebar">
-      <div class="sidebar-title">Your Profile</div>
-      <div class="stat-row">
-        <span class="stat-label">Articles read</span>
-        <span class="stat-val" id="sb-count">—</span>
-      </div>
-      <div class="stat-row">
-        <span class="stat-label">Skips penalised</span>
-        <span class="stat-val" id="sb-skips">—</span>
-      </div>
-      <div class="stat-row">
-        <span class="stat-label">Dominant topic</span>
-        <span class="stat-val" id="sb-dominant">—</span>
-      </div>
-      <div class="interests-title">Interest breakdown</div>
-      <div id="sb-interests"></div>
-      <button class="btn-wrap-up" onclick="endSession()">Wrap up session</button>
-    </aside>
+    <!-- Preference progression chart -->
+    <div class="pref-chart-wrap" id="pref-chart-wrap">
+      <div class="pref-chart-label">Your preference progression — how your interests shift each round</div>
+      <div class="pref-chart" id="pref-chart"></div>
+      <div class="pref-legend" id="pref-legend"></div>
+    </div>
 
+    <!-- Skeleton -->
+    <div class="skeleton-sheet" id="skeletons">
+      <div class="skel-line short"></div>
+      <div class="skel-line med"></div>
+      <div class="skel-line"></div>
+      <div class="skel-line med"></div>
+    </div>
+
+    <!-- The broadsheet -->
+    <div id="broadsheet-content" style="display:none">
+      <div class="paper-grid" id="paper-grid"></div>
+      <div class="explore-strip" id="explore-strip" style="display:none">
+        <span class="explore-flag-big">✦ Explore</span>
+        <div class="explore-divider"></div>
+        <div class="explore-content">
+          <div class="explore-headline" id="explore-headline"></div>
+          <div class="explore-sub" id="explore-sub"></div>
+        </div>
+        <div class="explore-actions" id="explore-actions">
+          <button class="btn-view-article" onclick="openOverlay('explore')">Read →</button>
+          <button class="btn-more" onclick="handleMoreLikeThis('explore', event)">More →</button>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════════ -->
-<!-- PHASE 3: SUMMARY                              -->
-<!-- ══════════════════════════════════════════════ -->
+<!-- ═══════════════════════════════════════════════ -->
+<!-- PHASE 3: SUMMARY                               -->
+<!-- ═══════════════════════════════════════════════ -->
 <div class="phase" id="phase-summary">
   <div class="summary-wrap">
-    <div class="summary-icon">📖</div>
-    <h1>Session complete!</h1>
-    <p>Here's a summary of your reading session, <strong id="sum-name">{{ user_name }}</strong>.</p>
+    <div class="summary-eyebrow">Session complete</div>
+    <h1>Good<br>reading,<br><em id="sum-name">{{ user_name }}</em>.</h1>
     <div class="summary-stats">
       <div class="summary-stat">
         <strong id="sum-rounds">—</strong>
-        <span>Rounds</span>
+        <span>Editions</span>
       </div>
       <div class="summary-stat">
         <strong id="sum-articles">—</strong>
@@ -592,48 +852,72 @@
       </div>
     </div>
     <div class="summary-cats" id="sum-cats"></div>
-    <button class="btn-new-session" onclick="newSession()">Start a new session</button>
+    <button class="btn-new" onclick="newSession()">Start a new edition →</button>
   </div>
 </div>
 
 <script>
-  // ── State ─────────────────────────────────────────────────────
-  let mode       = null;          // 'search' | 'browse'
-  let seedIds    = [];
-  let catFilter  = null;
-  let selectedId = null;
+  // ── State ───────────────────────────────────────────────────
+  let mode        = null;
+  let seedIds     = [];
+  let catFilter   = null;
   let currentRecs = [];
+  let selectedKey = null; // 'lead', 'sup-0', 'sup-1', 'sup-2', 'explore'
+  let overlayKey  = null;
 
-  // ── Phase management ──────────────────────────────────────────
+  // ── Auto-start from article clicked on landing page ─────────
+  window.addEventListener('DOMContentLoaded', () => {
+    const seedId = sessionStorage.getItem('seedArticleId');
+    if (seedId) {
+      sessionStorage.removeItem('seedArticleId');
+      sessionStorage.removeItem('seedArticleTitle');
+      autoStartFromSeed(seedId);
+    }
+  });
+
+  async function autoStartFromSeed(newsId) {
+    setLoading(true, 'Building your edition…');
+    try {
+      const res  = await fetch('/api/start', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ seed_ids: [newsId], category: null }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setLoading(false); return; }
+      showPhase('recs');
+      loadRound();
+    } catch (e) { /* fall through to normal cold start */ }
+    finally { setLoading(false); }
+  }
+
+  // ── Phase ───────────────────────────────────────────────────
   function showPhase(id) {
     document.querySelectorAll('.phase').forEach(p => p.classList.remove('active'));
     document.getElementById('phase-' + id).classList.add('active');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  // ── Toast ─────────────────────────────────────────────────────
-  function toast(msg, duration = 2800) {
+  // ── Toast ───────────────────────────────────────────────────
+  function toast(msg, d = 3000) {
     const el = document.getElementById('toast');
-    el.textContent = msg;
-    el.classList.add('show');
-    setTimeout(() => el.classList.remove('show'), duration);
+    el.textContent = msg; el.classList.add('show');
+    setTimeout(() => el.classList.remove('show'), d);
   }
 
-  // ── Loading overlay ───────────────────────────────────────────
+  // ── Loading ─────────────────────────────────────────────────
   function setLoading(on, text = 'Loading…') {
-    const el = document.getElementById('loading-overlay');
     document.getElementById('loader-text').textContent = text;
-    el.classList.toggle('show', on);
+    document.getElementById('loading-overlay').classList.toggle('show', on);
   }
 
-  // ── Logout ────────────────────────────────────────────────────
+  // ── Logout ──────────────────────────────────────────────────
   async function handleLogout() {
     await fetch('/api/end-session', { method: 'POST' }).catch(() => {});
     await fetch('/api/logout', { method: 'POST' });
     window.location.href = '/';
   }
 
-  // ── MODE SELECTION ────────────────────────────────────────────
+  // ── Mode selection ──────────────────────────────────────────
   function selectMode(m) {
     mode = m;
     document.getElementById('opt-search').classList.toggle('selected', m === 'search');
@@ -642,303 +926,381 @@
     document.getElementById('browse-box').classList.toggle('visible', m === 'browse');
     hideSeedCards(); hideStartBtn();
     seedIds = []; catFilter = null;
-
-    if (m === 'search') {
-      document.getElementById('search-input').focus();
-    } else {
-      loadCategories();
-    }
+    if (m === 'search') document.getElementById('search-input').focus();
+    else loadCategories();
   }
 
-  // ── SEARCH FLOW ───────────────────────────────────────────────
+  // ── Search ──────────────────────────────────────────────────
   async function runSearch() {
     const query = document.getElementById('search-input').value.trim();
     if (!query) { toast('Please enter a search term.'); return; }
     setLoading(true, 'Searching articles…');
     try {
-      const res  = await fetch('/api/search', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query }),
-      });
+      const res      = await fetch('/api/search', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ query }) });
       const articles = await res.json();
       if (!articles.length) { toast('No results found. Try different keywords.'); return; }
-      seedIds   = articles.map(a => a.news_id);
-      catFilter = null;
+      seedIds = articles.map(a => a.news_id);
       showSeedCards(articles, `Top matches for "${query}"`);
       showStartBtn();
-    } catch (e) {
-      toast('Search failed. Please try again.');
-    } finally {
-      setLoading(false);
-    }
+    } catch (e) { toast('Search failed.'); }
+    finally { setLoading(false); }
   }
 
-  // ── BROWSE FLOW ───────────────────────────────────────────────
+  // ── Browse ──────────────────────────────────────────────────
   let allCategories = {};
-
   async function loadCategories() {
     if (Object.keys(allCategories).length) { populateCatSelect(); return; }
     setLoading(true, 'Loading categories…');
     try {
-      const res  = await fetch('/api/categories');
-      allCategories = await res.json();
+      allCategories = await (await fetch('/api/categories')).json();
       populateCatSelect();
-    } catch (e) {
-      toast('Could not load categories.');
-    } finally {
-      setLoading(false);
-    }
+    } catch (e) { toast('Could not load categories.'); }
+    finally { setLoading(false); }
   }
-
   function populateCatSelect() {
     const sel = document.getElementById('cat-select');
     sel.innerHTML = '<option value="">Select a category…</option>';
     Object.keys(allCategories).sort().forEach(cat => {
-      const opt = document.createElement('option');
-      opt.value = cat; opt.textContent = cat;
-      sel.appendChild(opt);
+      const o = document.createElement('option'); o.value = cat; o.textContent = cat; sel.appendChild(o);
     });
     document.getElementById('subcat-select').innerHTML = '<option value="">Select a subcategory…</option>';
     hideSeedCards(); hideStartBtn();
   }
-
   function onCatChange() {
-    const cat   = document.getElementById('cat-select').value;
-    const subSel = document.getElementById('subcat-select');
-    subSel.innerHTML = '<option value="">Select a subcategory…</option>';
+    const cat = document.getElementById('cat-select').value;
+    const sub = document.getElementById('subcat-select');
+    sub.innerHTML = '<option value="">Select a subcategory…</option>';
     hideSeedCards(); hideStartBtn();
     if (!cat) return;
-    (allCategories[cat] || []).forEach(sub => {
-      const opt = document.createElement('option');
-      opt.value = sub; opt.textContent = sub;
-      subSel.appendChild(opt);
+    (allCategories[cat] || []).forEach(s => {
+      const o = document.createElement('option'); o.value = s; o.textContent = s; sub.appendChild(o);
     });
   }
-
   async function onSubcatChange() {
     const cat = document.getElementById('cat-select').value;
     const sub = document.getElementById('subcat-select').value;
     if (!cat || !sub) { hideSeedCards(); hideStartBtn(); return; }
-    catFilter = cat;
-    // We'll get seed IDs from the server when starting; show placeholder
-    seedIds = [];
-    showBrowsePreview(cat, sub);
-    showStartBtn();
-  }
-
-  function showBrowsePreview(cat, sub) {
+    catFilter = cat; seedIds = [];
     document.getElementById('seed-label').textContent = `Browsing: ${cat} › ${sub}`;
     document.getElementById('seed-list').innerHTML =
-      `<div class="seed-card"><div class="seed-info"><div class="seed-title">Top articles from ${sub} will seed your profile.</div><div class="seed-cat">${cat}</div></div></div>`;
+      `<div class="seed-card"><div><div class="seed-title">Top articles from ${esc(sub)} will seed your profile.</div><div class="seed-cat">${esc(cat)}</div></div></div>`;
     document.getElementById('seed-cards').classList.add('visible');
+    showStartBtn();
   }
-
-  // ── SEED CARD HELPERS ─────────────────────────────────────────
   function showSeedCards(articles, label) {
     document.getElementById('seed-label').textContent = label;
-    const list = document.getElementById('seed-list');
-    list.innerHTML = articles.map((a, i) => `
+    document.getElementById('seed-list').innerHTML = articles.map((a, i) => `
       <div class="seed-card">
         <div class="seed-num">${i+1}</div>
-        <div class="seed-info">
-          <div class="seed-title">${esc(a.title)}</div>
-          <div class="seed-cat">${esc(a.category)} › ${esc(a.subcategory)}</div>
-        </div>
+        <div><div class="seed-title">${esc(a.title)}</div><div class="seed-cat">${esc(a.category)} · ${esc(a.subcategory)}</div></div>
       </div>`).join('');
     document.getElementById('seed-cards').classList.add('visible');
   }
-
   function hideSeedCards() { document.getElementById('seed-cards').classList.remove('visible'); }
   function showStartBtn()   { document.getElementById('btn-start').classList.add('visible'); }
   function hideStartBtn()   { document.getElementById('btn-start').classList.remove('visible'); }
 
-  // ── START SESSION ─────────────────────────────────────────────
+  // ── Start session ────────────────────────────────────────────
   async function startSession() {
     setLoading(true, 'Building your profile…');
     try {
       let body;
-
       if (mode === 'browse') {
         const cat = document.getElementById('cat-select').value;
         const sub = document.getElementById('subcat-select').value;
-        // Get seed articles for this subcategory via search
-        const sRes  = await fetch('/api/search', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ query: sub + ' ' + cat }),
-        });
-        const sArticles = await sRes.json();
-        seedIds   = sArticles.map(a => a.news_id).slice(0, 5);
+        const sRes = await fetch('/api/search', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ query: sub + ' ' + cat }) });
+        seedIds   = (await sRes.json()).map(a => a.news_id).slice(0, 5);
         catFilter = cat;
         body = { seed_ids: seedIds, category: cat };
       } else {
         body = { seed_ids: seedIds, category: null };
       }
-
-      const res = await fetch('/api/start', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      });
+      const res = await fetch('/api/start', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
       const data = await res.json();
-      if (!res.ok) { toast(data.error || 'Failed to start session.'); return; }
-
+      if (!res.ok) { toast(data.error || 'Failed to start.'); return; }
       showPhase('recs');
       loadRound();
-    } catch (e) {
-      toast('Could not start session. Please try again.');
-    } finally {
-      setLoading(false);
-    }
+    } catch (e) { toast('Could not start session.'); }
+    finally { setLoading(false); }
   }
 
-  // ── RECOMMENDATION LOOP ───────────────────────────────────────
+  // ── Recommendation round ─────────────────────────────────────
   async function loadRound() {
-    // Show skeletons
-    document.getElementById('skeletons').style.display = 'flex';
-    document.getElementById('article-cards').style.display = 'none';
-    document.getElementById('action-bar').style.display = 'none';
-    selectedId = null;
+    document.getElementById('skeletons').style.display = 'block';
+    document.getElementById('broadsheet-content').style.display = 'none';
+    selectedKey = null;
 
     try {
       const res  = await fetch('/api/recommend');
       const data = await res.json();
-      if (!res.ok) { toast(data.error || 'Error loading recommendations.'); return; }
+      if (!res.ok) { toast(data.error || 'Error loading.'); return; }
 
       currentRecs = data.articles;
-      document.getElementById('round-badge').textContent = `Round ${data.round}`;
-      document.getElementById('recs-title').textContent =
-        data.round === 1 ? 'Your starting picks' : `Round ${data.round} picks`;
+      document.getElementById('edition-round').textContent  = `Edition ${data.round}`;
+      document.getElementById('edition-title').textContent  = data.round === 1 ? 'Your starting picks' : `Round ${data.round} recommendations`;
 
-      renderCards(data.articles);
+      renderBroadsheet(data.articles);
 
       document.getElementById('skeletons').style.display = 'none';
-      document.getElementById('article-cards').style.display = 'flex';
-      document.getElementById('action-bar').style.display = 'flex';
-      document.getElementById('btn-next').disabled = true;
+      document.getElementById('broadsheet-content').style.display = 'block';
+    } catch (e) { toast('Failed to load recommendations.'); }
+  }
 
-    } catch (e) {
-      toast('Failed to load recommendations.');
+  function renderBroadsheet(articles) {
+    // Separate: lead, supporting (non-diverse), explore (diverse)
+    const diverse  = articles.find(a => a.is_diverse);
+    const mainArts = articles.filter(a => !a.is_diverse);
+    const lead     = mainArts[0];
+    const supporting = mainArts.slice(1);
+
+    // LEAD
+    const expl = lead && lead.explanation;
+    const hasExpl = expl && (expl.because || (expl.keywords && expl.keywords.length));
+    const explHtml = hasExpl ? `
+      <div class="story-explanation">
+        ${expl.because ? `<div class="story-because"><span class="story-because-arrow">↳</span><span>Because you read: <em>${esc(expl.because.substring(0,80))}…</em></span></div>` : ''}
+        ${expl.keywords && expl.keywords.length ? `<div class="story-keywords">${expl.keywords.map(k => `<span class="kw">${esc(k)}</span>`).join('')}</div>` : ''}
+      </div>` : '';
+
+    const leadHtml = lead ? `
+      <div class="lead-story" id="art-lead" onclick="selectArt('lead', '${esc(lead.news_id)}', event)">
+        <div class="story-category">
+          <span>${esc(lead.category)}</span>
+          <span class="story-category-sub">· ${esc(lead.subcategory)}</span>
+          ${lead.score > 0 ? `<span class="score-tag">score ${lead.score.toFixed(3)}</span>` : ''}
+        </div>
+        <div class="lead-headline">${esc(lead.title)}</div>
+        <div class="lead-abstract">${esc(lead.abstract || '')}</div>
+        ${explHtml}
+        <div class="story-actions" id="actions-lead">
+          <button class="btn-view-article" onclick="openOverlay('lead', event)">Read story →</button>
+          <button class="btn-more" onclick="handleMoreLikeThis('lead', event)">More like this</button>
+        </div>
+      </div>` : '<div class="lead-story"></div>';
+
+    // SUPPORTING
+    const supHtml = supporting.map((a, i) => {
+      const key = 'sup-' + i;
+      const e2 = a.explanation;
+      const whyText = e2 && e2.because ? `Because you read: ${esc(e2.because.substring(0,70))}…` : (e2 && e2.keywords && e2.keywords.length ? e2.keywords.slice(0,3).map(k => esc(k)).join(' · ') : '');
+      return `
+        <div class="supporting-story" id="art-${key}" onclick="selectArt('${key}', '${esc(a.news_id)}', event)">
+          <div class="story-category">
+            <span>${esc(a.category)}</span>
+            <span class="story-category-sub">· ${esc(a.subcategory)}</span>
+            ${a.score > 0 ? `<span class="score-tag">score ${a.score.toFixed(3)}</span>` : ''}
+          </div>
+          <div class="supporting-headline">${esc(a.title)}</div>
+          <div class="supporting-abstract">${esc(a.abstract || '')}</div>
+          ${whyText ? `<div class="supporting-why">${esc(whyText)}</div>` : ''}
+          <div class="supporting-actions" id="actions-${key}">
+            <button class="btn-sup-view" onclick="openOverlay('${key}', event)">Read →</button>
+            <button class="btn-sup-more" onclick="handleMoreLikeThis('${key}', event)">More →</button>
+          </div>
+        </div>`;
+    }).join('');
+
+    document.getElementById('paper-grid').innerHTML = `
+      ${leadHtml}
+      <div class="supporting-col">${supHtml}</div>`;
+
+    // EXPLORE strip
+    if (diverse) {
+      document.getElementById('explore-headline').textContent = diverse.title;
+      document.getElementById('explore-sub').textContent = `${diverse.category} · ${diverse.subcategory} · Outside your usual topics`;
+      const strip = document.getElementById('explore-strip');
+      strip.style.display = 'flex';
+      strip.onclick = (e) => selectArt('explore', diverse.news_id, e);
+      // store explore data in a dataset
+      strip.dataset.newsId = diverse.news_id;
+    } else {
+      document.getElementById('explore-strip').style.display = 'none';
     }
   }
 
-  function renderCards(articles) {
-    const container = document.getElementById('article-cards');
-    container.innerHTML = articles.map((a, i) => {
-      const expl = a.explanation;
-      const hasExpl = expl && (expl.because || (expl.keywords && expl.keywords.length));
-      const explHtml = hasExpl ? `
-        <div class="card-explanation visible">
-          ${expl.because ? `
-            <div class="explanation-because">
-              <span>↳</span>
-              <span>Because you read: <em>${esc(expl.because.substring(0,70))}${expl.because.length>70?'…':''}</em></span>
-            </div>` : ''}
-          ${expl.keywords && expl.keywords.length ? `
-            <div class="explanation-keywords">
-              ${expl.keywords.map(k => `<span class="keyword-pill">${esc(k)}</span>`).join('')}
-            </div>` : ''}
-        </div>` : '';
-
-      const scoreHtml = a.score > 0
-        ? `<span class="score-pill">score ${a.score.toFixed(3)}</span>`
-        : '';
-
-      const explorTag = a.is_diverse
-        ? '<span class="explore-tag">✦ Explore</span>'
-        : '';
-
-      return `
-        <div class="article-card" id="card-${i}" onclick="selectCard(${i}, '${a.news_id}')">
-          <div class="card-top">
-            <span class="cat-badge">${esc(a.category)}</span>
-            <span class="subcat-badge">${esc(a.subcategory)}</span>
-            ${explorTag}
-            ${scoreHtml}
-          </div>
-          <div class="card-title">${esc(a.title)}</div>
-          <div class="card-abstract">${esc(a.abstract || '—')}</div>
-          ${explHtml}
-        </div>`;
-    }).join('');
-  }
-
-  function selectCard(index, newsId) {
+  function selectArt(key, newsId, event) {
+    if (event) event.stopPropagation();
     // Deselect all
-    document.querySelectorAll('.article-card').forEach(c => c.classList.remove('selected'));
-    // Select clicked
-    document.getElementById('card-' + index).classList.add('selected');
-    selectedId = newsId;
-    document.getElementById('btn-next').disabled = false;
+    ['lead', 'sup-0', 'sup-1', 'sup-2'].forEach(k => {
+      const el = document.getElementById('art-' + k);
+      if (el) { el.classList.remove('selected'); }
+      const act = document.getElementById('actions-' + k);
+      if (act) act.classList.remove('visible');
+    });
+    document.getElementById('explore-strip').classList.remove('selected');
+    document.getElementById('explore-actions').classList.remove('visible');
+
+    if (selectedKey === key) { selectedKey = null; return; } // toggle off
+
+    selectedKey = key;
+    if (key === 'explore') {
+      document.getElementById('explore-strip').classList.add('selected');
+      document.getElementById('explore-actions').classList.add('visible');
+    } else {
+      const el = document.getElementById('art-' + key);
+      if (el) el.classList.add('selected');
+      const act = document.getElementById('actions-' + key);
+      if (act) act.classList.add('visible');
+    }
   }
 
-  // ── NEXT ROUND ────────────────────────────────────────────────
-  async function handleNext() {
-    if (!selectedId) return;
-    const skippedIds = currentRecs
-      .filter(a => a.news_id !== selectedId)
-      .map(a => a.news_id);
+  function getArticleByKey(key) {
+    if (key === 'lead')    return currentRecs.find(a => !a.is_diverse && currentRecs.filter(r => !r.is_diverse).indexOf(a) === 0) || currentRecs[0];
+    if (key === 'explore') return currentRecs.find(a => a.is_diverse);
+    const mainArts = currentRecs.filter(a => !a.is_diverse);
+    const idx = parseInt(key.replace('sup-', '')) + 1;
+    return mainArts[idx];
+  }
 
-    setLoading(true, 'Updating your profile…');
+  // ── Open article detail overlay ──────────────────────────────
+  function openOverlay(key, event) {
+    if (event) event.stopPropagation();
+    const a = getArticleByKey(key);
+    if (!a) return;
+    overlayKey = key;
+
+    document.getElementById('ov-category').textContent = `${a.category} · ${a.subcategory}`;
+    document.getElementById('ov-headline').textContent = a.title;
+    document.getElementById('ov-abstract').textContent = a.abstract || 'No abstract available.';
+
+    const expl = a.explanation;
+    const hasExpl = expl && (expl.because || (expl.keywords && expl.keywords.length));
+    const explBox = document.getElementById('ov-explanation');
+    if (hasExpl) {
+      document.getElementById('ov-because').textContent = expl.because ? `Because you read: "${expl.because}"` : '';
+      document.getElementById('ov-kws').innerHTML = (expl.keywords || []).map(k => `<span class="overlay-kw">${esc(k)}</span>`).join('');
+      explBox.style.display = 'block';
+    } else {
+      explBox.style.display = 'none';
+    }
+
+    document.getElementById('ov-btn-more').onclick = () => { closeOverlay(null); handleMoreLikeThis(key, null); };
+    document.getElementById('article-overlay').classList.add('show');
+
+    // Record the click in background (user read this article)
+    recordClick(a.news_id);
+  }
+
+  function closeOverlay(event) {
+    if (event && event.target !== document.getElementById('article-overlay')) return;
+    document.getElementById('article-overlay').classList.remove('show');
+    // Reload next round since article was read
+    if (overlayKey !== null) {
+      overlayKey = null;
+      setTimeout(() => loadRound(), 300);
+    }
+  }
+
+  // ── Record click ─────────────────────────────────────────────
+  async function recordClick(newsId) {
+    const skippedIds = currentRecs.filter(a => a.news_id !== newsId).map(a => a.news_id);
     try {
-      const res = await fetch('/api/click', {
+      const res  = await fetch('/api/click', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ news_id: selectedId, skipped_ids: skippedIds }),
+        body: JSON.stringify({ news_id: newsId, skipped_ids: skippedIds }),
       });
       const data = await res.json();
-      if (res.ok) updateSidebar(data);
+      if (res.ok) updateProfile(data);
     } catch (e) { /* non-critical */ }
+  }
 
+  // ── More like this ───────────────────────────────────────────
+  async function handleMoreLikeThis(key, event) {
+    if (event) event.stopPropagation();
+    const a = getArticleByKey(key);
+    if (!a) return;
+
+    setLoading(true, 'Updating your profile…');
+    await recordClick(a.news_id);
     setLoading(false);
     await loadRound();
   }
 
-  function updateSidebar(data) {
+  // Category color palette — consistent across rounds
+  const CAT_COLORS = [
+    '#C8281A','#C8A228','#2A8A7A','#6A5ACD','#D2691E',
+    '#4682B4','#8B4513','#2E8B57','#8B008B','#B8860B',
+  ];
+  const catColorMap = {};
+  function getCatColor(cat) {
+    if (!catColorMap[cat]) {
+      const keys = Object.keys(catColorMap);
+      catColorMap[cat] = CAT_COLORS[keys.length % CAT_COLORS.length];
+    }
+    return catColorMap[cat];
+  }
+
+  function updateProfile(data) {
+    const strip = document.getElementById('profile-strip');
+    strip.style.display = 'flex';
     document.getElementById('sb-count').textContent    = data.history_count || '—';
     document.getElementById('sb-skips').textContent    = data.total_skipped ?? '—';
     document.getElementById('sb-dominant').textContent = data.dominant || '—';
 
     const summary = data.summary || {};
     const total   = Object.values(summary).reduce((a, b) => a + b, 0) || 1;
-    const sorted  = Object.entries(summary).sort((a, b) => b[1] - a[1]);
+    const sorted  = Object.entries(summary).sort((a, b) => b[1] - a[1]).slice(0, 4);
     document.getElementById('sb-interests').innerHTML = sorted.map(([cat, cnt]) => `
-      <div class="interest-row">
-        <div class="interest-name">
-          <span>${esc(cat)}</span>
-          <span>${cnt}</span>
-        </div>
-        <div class="interest-bar">
-          <div class="interest-fill" style="width:${Math.round(cnt/total*100)}%"></div>
-        </div>
+      <div class="interest-chip">
+        <span class="interest-chip-name">${esc(cat)}</span>
+        <div class="interest-chip-bar"><div class="interest-chip-fill" style="width:${Math.round(cnt/total*100)}%"></div></div>
+      </div>`).join('');
+
+    // Update preference progression chart
+    if (data.pref_history && data.pref_history.length > 0) {
+      renderPrefChart(data.pref_history);
+    }
+  }
+
+  function renderPrefChart(history) {
+    // Collect all categories ever seen
+    const allCats = new Set();
+    history.forEach(h => Object.keys(h.categories).forEach(c => allCats.add(c)));
+    const cats = Array.from(allCats);
+
+    // Ensure colors assigned
+    cats.forEach(c => getCatColor(c));
+
+    const chartEl = document.getElementById('pref-chart');
+    const legendEl = document.getElementById('pref-legend');
+    const wrap = document.getElementById('pref-chart-wrap');
+    wrap.classList.add('visible');
+
+    // Render one row per history entry
+    chartEl.innerHTML = history.map(h => {
+      const total = Object.values(h.categories).reduce((a, b) => a + b, 0) || 1;
+      const segments = cats.map(cat => {
+        const cnt = h.categories[cat] || 0;
+        const pct = Math.round(cnt / total * 100);
+        return pct > 0
+          ? `<div class="pref-segment" style="width:${pct}%;background:${getCatColor(cat)};opacity:0.85" title="${esc(cat)}: ${cnt}"></div>`
+          : '';
+      }).join('');
+      return `
+        <div class="pref-row">
+          <span class="pref-row-label">Round ${h.round}</span>
+          <div class="pref-bar-track">${segments}</div>
+        </div>`;
+    }).join('');
+
+    // Legend
+    legendEl.innerHTML = cats.map(cat => `
+      <div class="pref-legend-item">
+        <div class="pref-legend-dot" style="background:${getCatColor(cat)}"></div>
+        ${esc(cat)}
       </div>`).join('');
   }
 
-  // ── END SESSION ───────────────────────────────────────────────
+  // ── End session ──────────────────────────────────────────────
   async function endSession() {
-    // If an article is selected, record the click first
-    if (selectedId) {
-      const skippedIds = currentRecs
-        .filter(a => a.news_id !== selectedId)
-        .map(a => a.news_id);
-      await fetch('/api/click', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ news_id: selectedId, skipped_ids: skippedIds }),
-      }).catch(() => {});
-    }
-
     setLoading(true, 'Saving your history…');
     try {
       const res  = await fetch('/api/end-session', { method: 'POST' });
       const data = await res.json();
       showSummary(data);
-    } catch (e) {
-      toast('Could not save session.');
-    } finally {
-      setLoading(false);
-    }
+    } catch (e) { toast('Could not save session.'); }
+    finally { setLoading(false); }
   }
 
   function showSummary(data) {
@@ -951,43 +1313,30 @@
     const sorted  = Object.entries(summary).sort((a, b) => b[1] - a[1]);
 
     document.getElementById('sum-cats').innerHTML = sorted.length ? `
-      <h3>Categories explored</h3>
+      <div class="summary-cats-label">Categories explored</div>
       ${sorted.map(([cat, cnt]) => `
         <div class="summary-cat-row">
-          <div class="summary-cat-name">
-            <span>${esc(cat)}</span>
-            <span>${cnt} article${cnt>1?'s':''}</span>
-          </div>
-          <div class="summary-cat-bar">
-            <div class="summary-cat-fill" style="width:${Math.round(cnt/total*100)}%"></div>
-          </div>
+          <span class="summary-cat-name">${esc(cat)}</span>
+          <div class="summary-cat-bar"><div class="summary-cat-fill" style="width:${Math.round(cnt/total*100)}%"></div></div>
+          <span class="summary-cat-count">${cnt} article${cnt>1?'s':''}</span>
         </div>`).join('')}` : '';
 
     showPhase('summary');
   }
 
   function newSession() {
-    seedIds = []; catFilter = null; selectedId = null; currentRecs = [];
-    mode = null;
-    document.getElementById('opt-search').classList.remove('selected');
-    document.getElementById('opt-browse').classList.remove('selected');
-    document.getElementById('search-box').classList.remove('visible');
-    document.getElementById('browse-box').classList.remove('visible');
+    seedIds = []; catFilter = null; selectedKey = null; currentRecs = []; mode = null;
+    ['opt-search','opt-browse'].forEach(id => document.getElementById(id).classList.remove('selected'));
+    ['search-box','browse-box'].forEach(id => document.getElementById(id).classList.remove('visible'));
     document.getElementById('search-input').value = '';
     hideSeedCards(); hideStartBtn();
-    document.getElementById('sb-count').textContent = '—';
-    document.getElementById('sb-skips').textContent = '—';
-    document.getElementById('sb-dominant').textContent = '—';
-    document.getElementById('sb-interests').innerHTML = '';
+    document.getElementById('profile-strip').style.display = 'none';
     showPhase('cold');
   }
 
-  // ── UTILS ─────────────────────────────────────────────────────
   function esc(str) {
     if (!str) return '';
-    return String(str)
-      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
-      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 </script>
 </body>
